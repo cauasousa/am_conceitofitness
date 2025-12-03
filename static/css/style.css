@@ -1,0 +1,107 @@
+:root {
+    --primary-pink: #DDA8A0;
+    --primary-pink-dark: #C79387;
+    --primary-pink-rgb: 221, 168, 160;
+    /* usado para rgba(opacity) */
+    --base-white: #F9FBF6;
+}
+
+/* Botões principais (fallback caso Tailwind não aplique) */
+.btn-primary,
+.bg-primary-pink {
+    background-color: var(--primary-pink);
+    color: #fff;
+}
+
+.btn-primary:hover,
+.bg-primary-pink:hover {
+    background-color: var(--primary-pink-dark);
+}
+
+/* garantir que textos longos quebrem no footer */
+footer .break-words {
+    word-break: break-word;
+    max-width: 100%;
+}
+
+/* pequenas correções na tipografia e imagens */
+body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background-color: var(--base-white);
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* cartões */
+.card {
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+/* ajuda para inputs focados */
+input:focus,
+textarea:focus {
+    box-shadow: 0 0 0 4px rgba(221, 168, 160, 0.12);
+    border-color: var(--primary-pink-dark);
+    outline: none;
+}
+
+/* garantir header responsivo */
+@media (max-width: 640px) {
+    header .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .btn-primary,
+    .bg-primary-pink {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+}
+
+/* Fallbacks e utilitários para primary-pink (garante comportamento mesmo sem geração Tailwind) */
+.text-primary-pink {
+    color: var(--primary-pink) !important;
+}
+
+.hover\:text-primary-pink:hover {
+    color: var(--primary-pink) !important;
+}
+
+.bg-primary-pink {
+    background-color: var(--primary-pink) !important;
+}
+
+.bg-primary-pink-dark {
+    background-color: var(--primary-pink-dark) !important;
+}
+
+/* bordas (inclui classe com "slash" usada no template: border-primary-pink/20) */
+.border-primary-pink {
+    border-color: var(--primary-pink) !important;
+}
+
+/* para classes com barra (p.ex. border-primary-pink/20) o slash deve ser escapado no seletor */
+.border-primary-pink\/20 {
+    border-color: rgba(var(--primary-pink-rgb), 0.2) !important;
+}
+
+.border-primary-pink\/30 {
+    border-color: rgba(var(--primary-pink-rgb), 0.3) !important;
+}
+
+/* foco/hover extras para garantir contraste */
+.hover\:bg-primary-pink:hover {
+    background-color: var(--primary-pink) !important;
+    color: #fff !important;
+}
+
+/* garantia de visibilidade do texto em elementos com fundo escuro no hover */
+.btn-primary,
+.bg-primary-pink {
+    color: #fff !important;
+}

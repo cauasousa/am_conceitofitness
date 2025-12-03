@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- WRAPPER PRINCIPAL DO LAYOUT -->
+<div class="flex flex-col lg:flex-row lg:items-start gap-10">
+
+  <!-- COLUNA PRINCIPAL (LISTAGEM E EDIÇÃO DE PRODUTOS) -->
+  <div class="flex-1 lg:pr-4">
+    <h2 class="text-2xl font-semibold mb-4 text-primary-pink">Gerenciamento de Produtos</h2>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="bg-primary-pink/10 border border-primary-pink/30 text-primary-pink p-3 rounded mb-4 font-medium">
+        {{ messages[0] }}
+      </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="space-y-6">
+
+      <!-- Busca -->
+      <form method="get" class="mb-4">
+        <div class="flex gap-2 items-center">
+          <input name="q" type="search" placeholder="Pesquisar produtos por nome..."
+            value="{{ q|default('') }}"
+            class="w-full md:w-1/3 border rounded px-3 py-2 focus-ring" />
+
+          <button type="submit" class="bg-primary-pink text-white px-3 py-2 rounded">Buscar</button>
+
+          {% if q %}
+          <a href="{{ url_for('admin_dashboard') }}" class="ml-2 text-sm text-gray-600 hover:text-primary-pink">
+            Limpar
+          </a>
+          {% endif %}
+        </div>
+      </form>
+
+      <!-- AGRUPAMENTO POR CLASSIFICAÇÃO -->
+      {% for c in classifications %}
+      <section class="mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-lg font-semibold text-primary-pink">{{ c.name }}</h3>
+          <div class="text-sm text-gray-600">
+            {{ products|selectattr('classification','equalto', c)|list|length }} produtos
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          {% set class_products = products|selectattr('classification','equalto', c)|list %}
+          {% if class_products|length == 0 %}
+          <div class="text-sm text-gray-500">Nenhum produto nesta classificação.</div>
+
+          {% else %}
+          {% for p in class_products %}
+
+          <!-- CARD COLLAPSABLE -->
+          <details class="group bg-white rounded-lg shadow-xl border-t-4 border-primary-pink/50"
+            data-product-id="{{ p.id }}">
+
+            <!-- SUMMARY -->
+            <summary class="flex items-center justify-between gap-4 p-4 cursor-pointer select-none">
+              <div class="flex items-center gap-4">
+                {% if p.images|length > 0 %}
+                {% set thumb = p.images[0].image_url %}
+                {% else %}
+                {% set thumb = 'placeholder.jpg' %}
+                {% endif %}
+
+                <img src="{{ url_for('static', filename='images/' + thumb) }}"
+                  alt="{{ p.name }}" class="w-12 h-12 object-cover rounded border">
+
+                <div>
+                  <div class="font-medium">{{ p.name }}</div>
+                  <div class="text-xs text-muted-gray">
+                    REF {{ p.id }} • {{ p.stock_variants|length }} SKUs • {{ p.images|length }} fotos
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <div class="text-sm text-primary-pink font-semibold">
+                  R$
+                  {{ '%.2f' % (p.discount_price if p.discount_price is not none else p.price) }}
+                </div>
+
+                <svg class="w-4 h-4 text-gray-400 group-open:rotate-90 transition-transform"
+                  viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 8L10 12L14 8" stroke="currentColor"
+                    stroke-width="1.6" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                </svg>
+              </div>
+            </summary>
+
+            <!-- CONTENT (ABERTO) -->
+            <div class="p-5 border-t">
+              <div class="flex flex-col md:flex-row items-start gap-6">
+
+                <!-- IMAGEM PRINCIPAL + GALERIA -->
+                {% if p.images|length > 0 %}
+                {% set admin_main_img = p.images[0].image_url %}
+                {% else %}
+                {% set admin_main_img = 'placeholder.jpg' %}
+                {% endif %}
+
+                <div class="flex items-start gap-2">
+                  <img src="{{ url_for('static', filename='images/' + admin_main_img) }}"
+                    class="w-full md:w-24 h-48 md:h-24 object-cover rounded-md shadow-sm border">
+
+                  <div class="hidden md:block ml-3">
+                    <div class="text-xs font-medium mb-1">Imagens</div>
+                    <div class="space-y-2">
+                      {% for img in p.images %}
+                      <div class="flex items-center gap-2">
+                        <img src="{{ url_for('static', filename='images/' + img.image_url) }}"
+                          class="w-12 h-12 object-cover rounded border">
+
+                        <form action="{{ url_for('admin_remove_image', image_id=img.id) }}"
+                          method="post"
+                          onsubmit="return confirm('Remover esta imagem? Esta ação não pode ser desfeita.');">
+                          <button type="submit"
+                            class="text-xs text-red-500 hover:underline">Excluir</button>
+                        </form>
+                      </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- CAMPOS DE EDIÇÃO -->
+                <div class="flex-1">
+                  <div class="font-bold text-xl mb-3">{{ p.name }}</div>
+
+                  <!-- FORM PRINCIPAL -->
+                  <form action="{{ url_for('admin_edit', pid=p.id) }}" method="post"
+                    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-4 border-b pb-4"
+                    enctype="multipart/form-data">
+
+                    <input name="name" value="{{ p.name }}" placeholder="Nome"
+                      class="border px-3 py-2 text-sm rounded col-span-2 md:col-span-2">
+
+                    <input name="price" value="{{ '%.2f' % p.price }}"
+                      placeholder="Preço Normal"
+                      class="border px-3 py-2 text-sm rounded col-span-2 md:col-span-2">
+
+                    <input name="discount_price"
+                      value="{% if p.discount_price %}{{ '%.2f' % p.discount_price }}{% endif %}"
+                      placeholder="Preço Desconto (Opcional)"
+                      class="border px-3 py-2 text-sm rounded col-span-2 md:col-span-2 bg-yellow-50">
+
+                    <select name="classification"
+                      class="border px-3 py-2 text-sm rounded col-span-4">
+                      <option value="">-- sem classificação --</option>
+                      {% for c in classifications %}
+                      <option value="{{ c.id }}"
+                        {% if p.classification and p.classification.id == c.id %}selected{% endif %}>
+                        {{ c.name }}
+                      </option>
+                      {% endfor %}
+                    </select>
+
+                    <label class="col-span-4 text-sm">Adicionar Imagens (múltiplas)</label>
+                    <input type="file" name="images" accept="image/*" multiple
+                      class="border px-3 py-2 text-sm rounded col-span-4">
+
+                    <textarea name="description" placeholder="Descrição completa"
+                      class="border px-3 py-2 text-sm rounded col-span-4 h-20">
+                      {{ p.description }}
+                    </textarea>
+
+                    <button
+                      class="bg-primary-pink text-white px-3 py-2 rounded col-span-4 hover:opacity-90 transition duration-200 font-medium w-full">
+                      SALVAR DADOS PRINCIPAIS
+                    </button>
+                  </form>
+
+                  <!-- VARIAÇÕES / ESTOQUE -->
+                  <h4 class="font-semibold text-sm mb-2 text-primary-pink">
+                    Estoque por Variação (SKU):
+                  </h4>
+
+                  <form action="{{ url_for('admin_edit_stock', pid=p.id) }}" method="post"
+                    class="space-y-3 mb-4">
+                    {% for variant in p.stock_variants %}
+                    <div
+                      class="flex flex-col sm:flex-row items-center gap-3 bg-gray-50 p-3 rounded text-xs border">
+
+                      <div class="w-full sm:w-1/4 font-semibold">
+                        {{ variant.size }} / {{ variant.color }}
+                      </div>
+
+                      <input type="number" name="qty_{{ variant.id }}"
+                        value="{{ variant.quantity }}"
+                        class="w-full sm:w-20 border px-2 py-1 text-center">
+
+                      <input type="text" name="price_{{ variant.id }}"
+                        value="{% if variant.price %}{{ '%.2f' % variant.price }}{% endif %}"
+                        class="w-full sm:w-28 border px-2 py-1 text-center"
+                        placeholder="Preço (opcional)">
+
+                      <label class="flex items-center gap-1">
+                        <input type="checkbox" name="available_{{ variant.id }}"
+                          {% if variant.is_available %}checked{% endif %}
+                          class="form-checkbox text-green-500">
+                        <span>Disponível</span>
+                      </label>
+
+                      <div
+                        class="w-full sm:w-auto text-xs text-right
+                        {% if variant.quantity == 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                        {% if variant.quantity == 0 %}
+                        ESGOTADO
+                        {% else %}
+                        Em Estoque
+                        {% endif %}
+                      </div>
+                    </div>
+                    {% endfor %}
+
+                    {% if p.stock_variants|length > 0 %}
+                    <button type="submit"
+                      class="w-full bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600 transition">
+                      Atualizar Quantidades
+                    </button>
+                    {% endif %}
+                  </form>
+
+                  <!-- ADICIONAR NOVA VARIAÇÃO -->
+                  <h4 class="font-semibold text-sm mb-2 text-primary-pink">
+                    Adicionar Nova Variação:
+                  </h4>
+
+                  <form action="{{ url_for('admin_add_variant', pid=p.id) }}" method="post"
+                    class="grid grid-cols-1 sm:grid-cols-6 gap-2 bg-gray-50 p-3 rounded mb-4">
+
+                    <select name="size" required
+                      class="border px-2 py-1 text-sm rounded col-span-2">
+                      <option value="">Tamanho</option>
+                      <option value="PP">PP</option>
+                      <option value="P">P</option>
+                      <option value="M">M</option>
+                      <option value="G">G</option>
+                      <option value="GG">GG</option>
+                      <option value="EG">EG</option>
+                    </select>
+
+                    <input name="color" placeholder="Cor"
+                      class="border px-2 py-1 text-sm rounded col-span-2" required>
+
+                    <input name="price" placeholder="Preço"
+                      class="border px-2 py-1 text-sm rounded col-span-1">
+
+                    <input type="number" name="quantity" placeholder="Qtd"
+                      value="1" min="0"
+                      class="border px-2 py-1 text-sm rounded col-span-1">
+
+                    <button type="submit"
+                      class="col-span-6 bg-green-500 text-white px-3 py-2 rounded text-sm hover:bg-green-600 transition w-full">
+                      Criar Variação
+                    </button>
+                  </form>
+
+                </div><!-- /flex-1 -->
+              </div><!-- /row -->
+            </div><!-- /content -->
+          </details>
+
+          {% endfor %}
+          {% endif %}
+        </div>
+      </section>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- COLUNA DIREITA (ASIDE - GERENCIAR / ADICIONAR) -->
+  <aside class="w-full lg:w-80 xl:w-96 flex-shrink-0 lg:sticky lg:top-24 space-y-6">
+
+    <h3 class="text-xl font-semibold text-primary-pink">Gerenciar / Adicionar</h3>
+
+    <!-- CRIAR CLASSIFICAÇÃO -->
+    <form action="{{ url_for('admin_add_classification') }}" method="post"
+      class="bg-white p-4 rounded shadow space-y-2">
+      <div class="font-semibold mb-1">Criar Classificação</div>
+      <input name="name" placeholder="Nome da Classificação"
+        class="w-full border px-3 py-2 rounded">
+      <button class="bg-primary-pink text-white px-3 py-2 rounded w-full">
+        Criar Classificação
+      </button>
+    </form>
+
+    <!-- LISTA DE CLASSIFICAÇÕES -->
+    <div class="bg-white p-4 rounded shadow">
+      <div class="font-semibold mb-2">Classificações</div>
+
+      {% if classifications %}
+      <ul class="space-y-3">
+        {% for c in classifications %}
+        <li class="border rounded p-3">
+          <div class="flex items-start justify-between">
+            <div class="font-medium">{{ c.name }}</div>
+            <div class="flex gap-2">
+              <a href="#" class="text-sm text-primary-pink hover:underline">Editar</a>
+              <a href="#" class="text-sm text-red-500 hover:underline">Remover</a>
+            </div>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="text-sm text-gray-500">Nenhuma classificação criada.</div>
+      {% endif %}
+    </div>
+
+    <!-- ADICIONAR PRODUTO -->
+    <h3 class="text-xl font-semibold text-primary-pink">Adicionar Produto</h3>
+
+    <form action="{{ url_for('admin_add') }}" method="post" enctype="multipart/form-data"
+      class="bg-white p-5 rounded shadow space-y-3">
+
+      <input name="name" placeholder="Nome"
+        class="w-full border px-3 py-2 rounded">
+
+      <input name="price" placeholder="Preço Normal (Ex: 99.90)"
+        class="w-full border px-3 py-2 rounded">
+
+      <input name="discount_price" placeholder="Preço Desconto (Opcional)"
+        class="w-full border px-3 py-2 rounded bg-yellow-50">
+
+      <label class="text-sm font-medium">Classificação</label>
+      <select name="classification" class="w-full border px-3 py-2 rounded mb-2">
+        <option value="">-- sem classificação --</option>
+        {% for c in classifications %}
+        <option value="{{ c.id }}">{{ c.name }}</option>
+        {% endfor %}
+      </select>
+
+      <label class="text-sm font-medium">Imagens (múltiplas)</label>
+      <input type="file" name="images" accept="image/*" multiple class="w-full">
+
+      <textarea name="description" placeholder="Descrição"
+        class="w-full border px-3 py-2 rounded h-20"></textarea>
+
+      <button
+        class="bg-primary-pink text-white px-4 py-2 rounded w-full hover:opacity-90 transition font-medium">
+        Adicionar Novo Produto
+      </button>
+    </form>
+
+    <div class="mt-6 text-center">
+      <a href="{{ url_for('logout') }}"
+        class="text-sm text-red-600 hover:text-red-800 transition">Sair do Painel Admin</a>
+    </div>
+
+  </aside>
+
+</div>
+{% endblock %}

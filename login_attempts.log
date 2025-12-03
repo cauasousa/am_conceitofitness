@@ -1,0 +1,6 @@
+2025-11-24 21:01:09,519 INFO Login attempt username='admin' ip=127.0.0.1
+2025-11-24 21:01:09,672 INFO Login success username='admin' ip=127.0.0.1
+2025-11-24 21:02:02,885 INFO Login attempt username='admin' ip=127.0.0.1
+2025-11-24 21:02:02,989 INFO Session after login: {'admin_logged': True, '_permanent': True}
+2025-11-24 21:02:02,990 INFO Request cookies at login time: {}
+2025-11-24 21:02:02,990 INFO Login success username='admin' ip=127.0.0.1

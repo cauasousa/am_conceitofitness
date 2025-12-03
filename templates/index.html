@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+<form method="get" class="mb-6">
+  <div class="flex gap-2 max-w-md">
+    <input name="q" type="search" placeholder="Pesquisar produto por nome..." value="{{ q|default('') }}" class="w-full border rounded px-3 py-2 focus-ring" />
+    <button type="submit" class="btn-primary px-4 py-2 rounded">Buscar</button>
+  </div>
+</form>
+
+<h1 class="text-3xl font-extrabold mb-8 text-primary-pink">Produtos em Destaque</h1>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+  {% for p in products %}
+    {# constrói lista de imagens a partir de product.images; fallback para placeholder #}
+    {% set images_list = p.images|map(attribute='image_url')|list %}
+    {% if images_list|length == 0 %}
+      {% set images_list = ['placeholder.jpg'] %}
+    {% endif %}
+
+    <article class="bg-white p-4 rounded-md shadow-card card-product transform transition-all duration-300">
+      <div class="relative mb-3">
+        <div class="overflow-hidden rounded-md">
+          <div class="carousel-track flex snap-x snap-mandatory no-scrollbar overflow-x-scroll" data-product-id="{{ p.id }}">
+            {% for img_url in images_list %}
+              <div class="carousel-item flex-shrink-0 snap-start w-full">
+                <a href="{{ url_for('product_detail', product_id=p.id) }}" class="block group" aria-label="Ver detalhes de {{ p.name }}">
+                  <img src="{{ url_for('static', filename='images/' + img_url) }}" alt="{{ p.name }}" class="w-full h-56 object-cover rounded-md shadow-sm">
+                </a>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <button class="carousel-prev absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full shadow hidden sm:inline-flex" aria-label="Anterior">‹</button>
+        <button class="carousel-next absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full shadow hidden sm:inline-flex" aria-label="Próximo">›</button>
+      </div>
+
+      <div class="flex justify-between items-start mb-1">
+        <h2 class="text-lg font-bold truncate">{{ p.name }}</h2>
+        <div class="text-right">
+          {% if p.discount_price and p.discount_price < p.price %}
+            <div class="text-sm text-gray-500 line-through">R$ {{ '%.2f' % p.price }}</div>
+            <div class="font-extrabold text-lg text-primary-pink">R$ {{ '%.2f' % p.discount_price }}</div>
+          {% else %}
+            <div class="font-extrabold text-lg text-primary-pink">R$ {{ '%.2f' % p.price }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ p.description }}</p>
+
+      <div class="flex gap-3">
+        <a href="{{ url_for('product_detail', product_id=p.id) }}" class="btn-primary text-center px-4 py-2 rounded-md flex-1 text-sm font-medium">Comprar</a>
+       
+      </div>
+    </article>
+  {% endfor %}
+</div>
+{% endblock %}
+
