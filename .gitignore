@@ -1,0 +1,26 @@
+# Ambiente virtual
+venv/
+.env/
+.env.*
+
+# Arquivos de ambiente
+.env
+*.env
+
+# Arquivos de configuração
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Diretórios de build
+build/
+dist/
+*.egg-info/
+
+# VSCode
+.vscode/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
