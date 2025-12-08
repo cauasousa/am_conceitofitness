@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+/* CSS PERSONALIZADO para o Radio Button */
+/* Remove completamente o marker padrão dos radio buttons */
+.js-shipping-radio input[type="radio"]::before,
+.js-shipping-radio input[type="radio"]::after,
+.js-shipping-radio input[type="radio"]::marker {
+    display: none !important;
+    content: none !important;
+}
+
+/* Reset completo do radio button */
+.js-shipping-radio input[type="radio"] {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #DDA8A0; /* Cor da borda base */
+    border-radius: 50%;
+    cursor: pointer;
+    background-color: white;
+    flex-shrink: 0;
+    margin-top: 0.25rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.js-shipping-radio input[type="radio"]:checked {
+    /* Cor do ponto central (Primary Pink) */
+    background: radial-gradient(circle at center, #DDA8A0 35%, white 45%);
+    border-color: #DDA8A0;
+    /* Adiciona um efeito de anel branco/rosa ao ser checado */
+    box-shadow: 0 0 0 2px white, 0 0 0 4px #DDA8A0; 
+}
+
+.js-shipping-radio input[type="radio"]:hover {
+    border-color: #C79387;
+}
+/* Limpa qualquer marcador de lista que possa estar causando o ponto preto */
+#shipping-options-response, #shipping-options-response div {
+    list-style: none !important;
+}
+</style>
+
+
+
+<div class="mb-6">
+<a href="{{ url_for('index') }}" class="inline-block w-64 text-center border-2 border-primary-pink text-primary-pink py-2 rounded transition 
+hover:bg-primary-pink hover:text-white hover:shadow-lg focus-ring focus:outline-none font-medium">
+Voltar para o Catálogo
+</a>
+</div>
+
+<h1 class="text-3xl font-extrabold mb-8 text-primary-pink">Finalizar Compra</h1>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2 space-y-6">
+
+        <h2 class="font-bold text-xl text-gray-700 border-b pb-2">Seu Pedido</h2>
+        
+        <div id="cart-items-list" class="space-y-4 p-4 bg-white shadow-lg rounded-lg border border-gray-100">
+            <div class="text-gray-500 italic text-center">Carregando itens...</div>
+        </div>
+
+        <div class="p-6 bg-white shadow-lg rounded-lg border border-gray-100 space-y-4">
+            
+            <div class="js-shipping-calculator-head space-y-3">
+                
+                <div id="cep-input-area" class="space-y-3">
+                    <div class="font-bold text-lg text-primary-pink">🚚 Calcular Frete e Entrega</div>
+                    <div class="flex flex-col sm:flex-row gap-3 items-center">
+                        <input id="cep-input" type="text" placeholder="Digite o CEP (apenas números)" maxlength="8" inputmode="numeric" class="border-2 border-gray-300 rounded px-4 py-2 w-full sm:w-48 focus:ring-2 focus:ring-primary-pink focus:border-primary-pink transition">
+                        
+                        <button id="calc-shipping" type="button" class="btn-primary px-6 py-2 rounded w-full sm:w-auto font-medium whitespace-nowrap transition">Calcular</button>
+                    </div>
+                    
+                    <!-- Mensagem de erro do CEP -->
+                    <div id="cep-error-message" class="hidden p-3 bg-red-50 rounded-lg border border-red-200 flex items-start gap-2">
+                        <svg class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                        <div>
+                            <div class="font-medium text-red-700">Não conseguimos encontrar esse CEP.</div>
+                            <div class="text-sm text-red-600">Digite assim: <strong>65889560</strong></div>
+                        </div>
+                    </div>
+                    
+                    <a href="http://www.buscacep.correios.com.br/sistemas/buscacep/" target="_blank" class="text-primary-pink hover:underline text-sm">Não sei meu CEP</a>
+                </div>
+                
+                <div id="cep-calculated-summary" class="hidden p-4 bg-primary-pink/10 rounded-lg border border-primary-pink/30">
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium">
+                            <span class="text-gray-600">CEP Calculado:</span>
+                            <strong class="text-primary-pink ml-2" id="current-cep-display"></strong>
+                        </span>
+                        <a href="#" class="js-shipping-calculator-change-zipcode text-sm text-primary-pink hover:underline font-medium">Alterar CEP</a>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div id="shipping-options-response" class="hidden space-y-3 border-t pt-4 list-none"> 
+                <h4 class="font-bold text-gray-800 text-sm uppercase tracking-wide">Escolha uma opção de entrega:</h4>
+                
+                <div class="group relative list-none">
+                    <label for="option_pickup" class="js-shipping-radio list-item block p-5 rounded-lg border-2 cursor-pointer transition-all duration-200 bg-gray-50 border-gray-300 hover:border-primary-pink/50">
+                        <div class="flex items-start gap-4 w-full">
+                            <input id="option_pickup" class="shipping-method js-shipping-radio-input" data-price="0.00" data-code="pickup" data-name="Retirar Pessoalmente (Grátis)" type="radio" value="pickup" name="shipping_option" required>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h3 class="font-bold text-gray-900 text-base">📍 Retirar Pessoalmente</h3>
+                                    <span class="text-2xl font-extrabold text-green-600">GRÁTIS</span>
+                                </div>
+                                <p class="text-sm text-gray-700 mb-1">Imediato</p>
+                                <p class="text-xs text-gray-600">Compre online e retire em um ponto nosso</p>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+                <div id="delivery-options-container" class="space-y-3 list-none">
+                    </div>
+                
+                <div id="shipping-error" class="hidden p-4 bg-red-50 border border-red-300 rounded-lg text-red-700 text-sm font-medium"></div>
+
+            </div>
+            
+        </div>
+
+        
+    </div>
+
+    <aside class="lg:col-span-1 p-6 bg-primary-pink/5 rounded-lg shadow-2xl border border-primary-pink/20 sticky top-4 h-fit">
+        <h3 class="text-lg font-extrabold mb-4 text-primary-pink">Resumo do Pedido</h3>
+        
+        <div id="summary-list" class="divide-y divide-gray-200 space-y-2 pb-4">
+        </div>
+
+        <div class="mt-2 flex items-center justify-between">
+            <div class="text-base text-gray-700">Subtotal</div>
+            <div id="summary-subtotal" class="font-semibold">R$ 0,00</div>
+        </div>
+        
+        <div class="mt-1 flex items-center justify-between border-b pb-4">
+            <div class="text-base text-gray-700">Frete</div>
+            <div id="summary-shipping-cost" class="font-semibold text-green-600">R$ 0,00</div>
+        </div>
+
+        <div class="mt-4 flex items-center justify-between">
+            <div class="text-xl font-extrabold text-gray-900">Total a Pagar</div>
+            <div id="summary-total" class="text-3xl font-extrabold text-primary-pink">R$ 0,00</div>
+        </div>
+
+        <div class="mt-6">
+            <button id="checkout-btn" class="w-full bg-gray-400 text-white px-4 py-3 rounded text-lg font-bold cursor-not-allowed transition" disabled>
+                Prosseguir para Finalizar Pedido
+            </button>
+            <div id="empty-cart-message" class="hidden mt-3 p-3 bg-yellow-50 border border-yellow-300 rounded text-yellow-800 text-sm text-center">
+                Adicione produtos ao carrinho para continuar
+            </div>
+        </div>
+    </aside>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+ if(typeof renderCartPage === 'function') renderCartPage();
+ 
+ // Função para atualizar estado do botão de checkout
+ const updateCheckoutButtonState = () => {
+     const checkoutBtn = document.getElementById('checkout-btn');
+     const emptyCartMessage = document.getElementById('empty-cart-message');
+     
+     try {
+         const cart = JSON.parse(localStorage.getItem('cart_v1') || '[]');
+         const hasItems = cart.length > 0;
+         
+         if (hasItems) {
+             checkoutBtn.disabled = false;
+             checkoutBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+             checkoutBtn.classList.add('bg-primary-pink', 'hover:bg-pink-600');
+             emptyCartMessage.classList.add('hidden');
+         } else {
+             checkoutBtn.disabled = true;
+             checkoutBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+             checkoutBtn.classList.remove('bg-primary-pink', 'hover:bg-pink-600');
+             emptyCartMessage.classList.remove('hidden');
+         }
+     } catch (e) {
+         checkoutBtn.disabled = true;
+         checkoutBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+     }
+ };
+ 
+ // Evento do botão checkout
+ const checkoutBtn = document.getElementById('checkout-btn');
+ if(checkoutBtn) {
+     checkoutBtn.addEventListener('click', () => {
+         const savedCep = localStorage.getItem('user_cep');
+         const url = savedCep ? `/checkout?cep=${savedCep}` : '/checkout';
+         window.location.href = url;
+     });
+ }
+ 
+ // Atualiza estado inicial
+ updateCheckoutButtonState();
+ 
+ // Observa mudanças no localStorage
+ window.addEventListener('storage', updateCheckoutButtonState);
+});
+</script>
+
+{% endblock %}

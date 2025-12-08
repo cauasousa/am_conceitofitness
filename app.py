@@ -1,11 +1,14 @@
 import os
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship, joinedload
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
-from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey, Boolean # Importações necessárias
+from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey, Boolean, DateTime
+import math
+import requests
+from datetime import datetime
 
 # Carrega variáveis de ambiente
 load_dotenv()
@@ -15,7 +18,7 @@ SECRET = os.environ.get("FLASK_SECRET") or os.environ.get("SECRET_KEY") or "troq
 if not DATABASE_URL:
   raise SystemExit("Configure DATABASE_URL no .env")
 
-engine = create_engine(DATABASE_URL, future=True)
+engine = create_engine(DATABASE_URL, future=True, pool_recycle=3600, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine)
 
 Base = declarative_base()
@@ -108,6 +111,185 @@ DEBUG = os.environ.get("FLASK_DEBUG", "true").lower() in ("1", "true", "yes")
 @app.route("/health")
 def health():
     return "ok", 200
+
+# CONSTANTES DE FRETE
+PICKUP_POINT_CEP = "65606-530"  # Caxias
+COST_PER_KM = 0.1724  # R$ por km
+
+def get_cep_coordinates(cep):
+    """
+    Obtém latitude/longitude de um CEP usando a API ViaCEP + Nominatim.
+    Retorna tuple (lat, lon) ou None se não encontrar.
+    """
+    try:
+        cep_clean = cep.replace('-', '').replace(' ', '').strip()
+        if len(cep_clean) != 8 or not cep_clean.isdigit():
+            print(f"[warn] CEP inválido: {cep_clean}")
+            return None
+            
+        # Busca dados do CEP na ViaCEP
+        url = f"https://viacep.com.br/ws/{cep_clean}/json/"
+        resp = requests.get(url, timeout=5)
+        
+        if resp.status_code == 200:
+            data = resp.json()
+            if not data.get('erro'):
+                # ViaCEP retorna logradouro, localidade, uf
+                logradouro = data.get('logradouro', '')
+                localidade = data.get('localidade', '')
+                uf = data.get('uf', '')
+                
+                # Usa Nominatim para converter endereço em coordenadas
+                return get_coordinates_nominatim(logradouro, localidade, uf)
+            else:
+                print(f"[warn] CEP não encontrado: {cep_clean}")
+                return None
+        else:
+            print(f"[warn] ViaCEP retornou status {resp.status_code}")
+            return None
+    except Exception as e:
+        print(f"[warn] Erro ao buscar CEP {cep}: {e}")
+        return None
+
+def get_coordinates_nominatim(street, city, state):
+    """
+    Usa Nominatim (OpenStreetMap) para obter coordenadas a partir do endereço.
+    Retorna tuple (lat, lon) ou None se não encontrar.
+    """
+    try:
+        if not city:
+            print("[warn] Cidade não fornecida")
+            return None
+            
+        # Monta query para nominatim
+        addr = f"{city}, {state}, Brasil"
+        if street:
+            addr = f"{street}, {addr}"
+            
+        url = "https://nominatim.openstreetmap.org/search"
+        params = {
+            'q': addr,
+            'format': 'json',
+            'limit': 1
+        }
+        headers = {'User-Agent': 'AM-Conceito-Fitness-Shop'}
+        
+        resp = requests.get(url, params=params, headers=headers, timeout=5)
+        
+        if resp.status_code == 200:
+            data = resp.json()
+            if data and len(data) > 0:
+                lat = float(data[0]['lat'])
+                lon = float(data[0]['lon'])
+                print(f"[info] Coordenadas encontradas: ({lat}, {lon}) para {addr}")
+                return (lat, lon)
+            else:
+                print(f"[warn] Nominatim não encontrou coordenadas para: {addr}")
+                return None
+        else:
+            print(f"[warn] Nominatim retornou status {resp.status_code}")
+            return None
+    except Exception as e:
+        print(f"[warn] Erro ao buscar coordenadas nominatim: {e}")
+        return None
+
+def haversine_distance(lat1, lon1, lat2, lon2):
+    """
+    Calcula distância em km entre dois pontos (lat/lon) usando fórmula de Haversine.
+    """
+    R = 6371  # Raio da Terra em km
+    
+    lat1_rad = math.radians(lat1)
+    lat2_rad = math.radians(lat2)
+    delta_lat = math.radians(lat2 - lat1)
+    delta_lon = math.radians(lon2 - lon1)
+    
+    a = math.sin(delta_lat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
+    c = 2 * math.asin(math.sqrt(a))
+    
+    return R * c
+
+@app.route("/api/calculate-shipping", methods=["POST"])
+def calculate_shipping():
+    """
+    Calcula o custo do frete baseado no CEP do cliente.
+    Recebe JSON: { "cep": "xxxxx-xxx", "method": "delivery" ou "pickup" }
+    Retorna JSON: { "success": bool, "shipping_cost": float, "distance_km": float, "message": str }
+    """
+    try:
+        data = request.get_json() or {}
+        cep = (data.get('cep') or '').strip()
+        method = (data.get('method') or 'delivery').strip()
+        
+        print(f"[info] calculate_shipping chamado: CEP={cep}, method={method}")
+        
+        # Se for retirar no ponto, frete é grátis
+        if method == 'pickup':
+            return jsonify({
+                'success': True,
+                'shipping_cost': 0.0,
+                'distance_km': 0.0,
+                'message': 'Retirada no ponto: Frete grátis'
+            })
+        
+        # Validação básica do CEP
+        if not cep or len(cep.replace('-', '')) != 8:
+            return jsonify({
+                'success': False,
+                'shipping_cost': 0.0,
+                'distance_km': 0.0,
+                'message': 'CEP inválido. Use formato: xxxxx-xxx'
+            }), 400
+        
+        # Obter coordenadas do CEP do cliente
+        print(f"[info] Buscando coordenadas do cliente para CEP {cep}...")
+        client_coords = get_cep_coordinates(cep)
+        if not client_coords:
+            return jsonify({
+                'success': False,
+                'shipping_cost': 0.0,
+                'distance_km': 0.0,
+                'message': 'CEP não encontrado. Tente outro.'
+            }), 404
+        
+        # Obter coordenadas do ponto de retirada
+        print(f"[info] Buscando coordenadas do ponto de retirada...")
+        pickup_coords = get_cep_coordinates(PICKUP_POINT_CEP)
+        if not pickup_coords:
+            return jsonify({
+                'success': False,
+                'shipping_cost': 0.0,
+                'distance_km': 0.0,
+                'message': 'Erro ao calcular frete. Tente novamente.'
+            }), 500
+        
+        # Calcular distância
+        distance_km = haversine_distance(
+            pickup_coords[0], pickup_coords[1],
+            client_coords[0], client_coords[1]
+        )
+        
+        # Calcular custo
+        shipping_cost = (distance_km * COST_PER_KM) + 2
+        
+        print(f"[info] Frete calculado: {distance_km:.2f}km = R$ {shipping_cost:.2f}")
+        
+        return jsonify({
+            'success': True,
+            'shipping_cost': round(shipping_cost, 2),
+            'distance_km': round(distance_km, 2),
+            # 'message': f'Frete para {distance_km:.1f} km: R$ {shipping_cost:.2f}'
+            'message': f'Chega entre entre 3 a 7 dias úteis.'
+        })
+    
+    except Exception as e:
+        print(f"[error] Erro em calculate_shipping: {e}")
+        return jsonify({
+            'success': False,
+            'shipping_cost': 0.0,
+            'distance_km': 0.0,
+            'message': f'Erro ao calcular frete: {str(e)}'
+        }), 500
 
 # =========================================================================
 # ROTAS PÚBLICAS
@@ -427,10 +609,88 @@ def admin_remove_image(image_id):
     flash("Imagem removida com sucesso.")
     return redirect(url_for("admin_dashboard"))
 
+@app.route("/admin/delete/<int:pid>", methods=["POST"])
+@admin_required
+def admin_delete(pid):
+    """Deleta um produto completamente (imagens, variações e dados)"""
+    with SessionLocal() as db:
+        product = db.get(Product, pid)
+        if not product:
+            flash("Produto não encontrado")
+            return redirect(url_for("admin_dashboard"))
+        
+        # Remove imagens do disco
+        for img in product.images:
+            try:
+                path = os.path.join(app.config["UPLOAD_FOLDER"], img.image_url)
+                if os.path.exists(path):
+                    os.remove(path)
+            except Exception as e:
+                print(f"[warn] Erro ao remover arquivo: {e}")
+        
+        # Remove produto (cascata remove imagens e variações)
+        db.delete(product)
+        db.commit()
+    
+    flash(f"Produto '{product.name}' deletado com sucesso!")
+    return redirect(url_for("admin_dashboard"))
+
+@app.route("/admin/delete_variant/<int:variant_id>", methods=["POST"])
+@admin_required
+def admin_delete_variant(variant_id):
+    """Deleta uma variação de um produto"""
+    with SessionLocal() as db:
+        variant = db.get(ProductStock, variant_id)
+        if not variant:
+            flash("Variação não encontrada")
+            return redirect(url_for("admin_dashboard"))
+        
+        product_id = variant.product_id
+        db.delete(variant)
+        db.commit()
+    
+    flash("Variação deletada com sucesso!")
+    return redirect(url_for("admin_dashboard"))
+
+@app.route("/admin/delete_classification/<int:class_id>", methods=["POST"])
+@admin_required
+def admin_delete_classification(class_id):
+    """Deleta uma classificação (se não tiver produtos)"""
+    with SessionLocal() as db:
+        classification = db.get(Classification, class_id)
+        if not classification:
+            flash("Classificação não encontrada")
+            return redirect(url_for("admin_dashboard"))
+        
+        # Verifica se há produtos nesta classificação
+        product_count = db.query(Product).filter_by(classification_id=class_id).count()
+        if product_count > 0:
+            flash(f"Não é possível deletar a classificação '{classification.name}' porque há {product_count} produto(s) associado(s)")
+            return redirect(url_for("admin_dashboard"))
+        
+        class_name = classification.name
+        db.delete(classification)
+        db.commit()
+    
+    flash(f"Classificação '{class_name}' deletada com sucesso!")
+    return redirect(url_for("admin_dashboard"))
+
 @app.route("/logout")
 def logout():
   session.pop("admin_logged", None)
   return redirect(url_for("index"))
+
+# ======== NOVAS ROTAS PARA CARRINHO E CHECKOUT ========
+@app.route("/cart")
+def cart():
+  # Página do carrinho — conteúdo gerenciado via JS (localStorage)
+  return render_template("cart.html")
+
+@app.route("/checkout")
+def checkout():
+  # Página de checkout/entrega/pagamento
+  return render_template("checkout.html")
+
 
 if __name__ == "__main__":
   print(f"[startup] Iniciando app em http://{HOST}:{PORT}  (DEBUG={DEBUG})")

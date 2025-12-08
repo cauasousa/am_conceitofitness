@@ -1,195 +1,572 @@
 {% extends "base.html" %}
 {% block content %}
 
+<style>
+/* CSS PERSONALIZADO para o Radio Button (Padronização com o Carrinho) */
+/* Remove completamente o marker padrão dos radio buttons */
+.js-shipping-radio input[type="radio"]::before,
+.js-shipping-radio input[type="radio"]::after,
+.js-shipping-radio input[type="radio"]::marker {
+  display: none !important;
+  content: none !important;
+}
+
+.js-shipping-radio input[type="radio"] {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #DDA8A0; /* Primary Pink mais suave */
+  border-radius: 50%;
+  cursor: pointer;
+  background-color: white;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.js-shipping-radio input[type="radio"]:checked {
+  background: radial-gradient(circle at center, #DDA8A0 35%, white 45%);
+  border-color: #DDA8A0;
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #DDA8A0;
+}
+
+.js-shipping-radio input[type="radio"]:hover {
+  border-color: #C79387;
+}
+
+/* Limpa qualquer marcador de lista que possa estar causando o ponto preto */
+.shipping-options-container div {
+  list-style: none !important;
+}
+</style>
+
 <div class="mb-6">
- <a href="{{ url_for('index') }}" class="inline-block w-64 text-center border-2 border-primary-pink text-primary-pink py-2 rounded transition 
- hover:bg-primary-pink hover:text-white hover:shadow-lg focus-ring focus:outline-none font-medium">
- Voltar para a Loja
+<a href="{{ url_for('index') }}" class="inline-block w-64 text-center border-2 border-primary-pink text-primary-pink py-2 rounded transition 
+hover:bg-primary-pink hover:text-white hover:shadow-lg focus-ring focus:outline-none font-medium">
+Voltar para a Loja
 </a>
 </div>
 
 <div class="flex flex-col lg:flex-row gap-8 bg-white p-6 rounded-md-lg shadow-card">
+
+<div class="w-full lg:w-3/5 flex gap-4">
+ <div class="flex-1">
+  {# Imagem principal (primeira da lista) #}
+  {% if product.images|length > 0 %}
+   {% set main_img = product.images[0].image_url %}
+  {% else %}
+   {% set main_img = 'placeholder.jpg' %}
+  {% endif %}
+
+  <div class="mb-4">
+   <img id="detail-main-image" src="{{ url_for('static', filename='images/' + main_img) }}" alt="{{ product.name }}" class="w-full h-auto object-cover rounded-md shadow-sm max-h-[600px] ">
+  </div>
+
+  <div class="flex gap-2 overflow-x-auto py-2 no-scrollbar" id="detail-thumbs">
+   {# Miniaturas #}
+   {% for img in product.images %}
+   <button class="thumb-btn border rounded p-0.5 flex-shrink-0 {% if loop.first %}ring-2 ring-primary-pink{% endif %}" data-src="{{ url_for('static', filename='images/' + img.image_url) }}">
+    <img src="{{ url_for('static', filename='images/' + img.image_url) }}" class="w-20 h-20 object-cover rounded">
+   </button>
+   {% endfor %}
+  </div>
+ </div>
+</div>
+
+<div class="w-full lg:w-2/5 space-y-5">
  
- <div class="w-full lg:w-3/5 flex gap-4">
-  <div class="flex-1">
-   {# Imagem principal (primeira da lista) - correção para evitar filtro inválido #}
-   {% if product.images|length > 0 %}
-     {% set main_img = product.images[0].image_url %}
-   {% else %}
-     {% set main_img = 'placeholder.jpg' %}
-   {% endif %}
+ <div class="border-b pb-3">
+ <h1 class="text-2xl font-bold">{{ product.name }} - REF:: {{ product.id }}</h1>
+ <div class="flex items-center justify-between mt-3">
+  
+  <div class="text-right">
+   {# Preço dinâmico: JS irá atualizar #}
+   <div class="text-sm" id="product-price-original">{% if product.discount_price and product.discount_price < product.price %}R$ {{ '%.2f' % product.price }}{% endif %}</div>
+   <div class="text-2xl font-extrabold text-primary-pink" id="product-price">R$ {{ '%.2f' % (product.discount_price if product.discount_price is not none else product.price) }}</div>
+  </div>
+ </div>
+ </div>
 
-   <div class="mb-4">
-    <img id="detail-main-image" src="{{ url_for('static', filename='images/' + main_img) }}" alt="{{ product.name }}" class="w-full h-auto object-cover rounded-md shadow-sm max-h-[600px] ">
-   </div>
-
-   <div class="flex gap-2 overflow-x-auto py-2 no-scrollbar" id="detail-thumbs">
-    {# Miniaturas: garante que todas as imagens sejam exibidas #}
-    {% for img in product.images %}
-     <button class="thumb-btn border rounded p-0.5 flex-shrink-0 {% if loop.first %}ring-2 ring-primary-pink{% endif %}" data-src="{{ url_for('static', filename='images/' + img.image_url) }}">
-      <img src="{{ url_for('static', filename='images/' + img.image_url) }}" class="w-20 h-20 object-cover rounded">
-     </button>
-    {% endfor %}
-   </div>
+ <div class="text-sm space-y-3">
+ <h3 class="font-bold text-gray-700">INFORMAÇÕES:</h3>
+ <p>{{ product.description }}</p>
+ 
+ <h3 class="font-bold text-gray-700">CARACTERÍSTICAS PRINCIPAIS:</h3>
+ <ul class="list-disc list-inside text-gray-600 space-y-1">
+  {% for item in ["TECIDO RESPIRÁVEL", "PROTEÇÃO UV", "FLEXIBILIDADE"] %}
+   <li>{{ item }}</li>
+  {% endfor %}
+ </ul>
+ </div>
+ 
+ <div class="space-y-4 border-t pt-4" id="selection-area">
+ <h3 class="font-bold text-lg text-primary-pink">Personalize seu Pedido</h3>
+  
+ <div class="space-y-2" id="size-options">
+  <h3 class="font-bold">TAMANHO:</h3>
+  <div class="flex gap-3">
+   {% for size in sizes %}
+   <label class="inline-flex items-center">
+   <input type="radio" name="size" value="{{ size }}" class="form-radio size-radio text-primary-pink focus:ring-primary-pink">
+   <span class="ml-2">{{ size }}</span>
+   </label>
+   {% endfor %}
   </div>
  </div>
 
- <div class="w-full lg:w-2/5 space-y-5">
+ <div class="space-y-2" id="color-options">
+  <h3 class="font-bold">COR:</h3>
+  <div class="flex gap-3 items-center">
+   {% for color in colors %}
+   <label class="inline-flex items-center">
+   <input type="radio" name="color" value="{{ color }}" class="form-radio color-radio text-primary-pink focus:ring-primary-pink">
+   <span class="ml-2">{{ color }}</span>
+   </label>
+   {% endfor %}
+  </div>
+ </div>
+
+ {# QUANTIDADE: Este bloco é controlado pelo JS #}
+ <div id="quantity-block" class="mt-3 flex items-center gap-3" aria-hidden="true">
+  <div class="flex items-center border rounded overflow-hidden">
+  <button type="button" id="qty-decrement" class="px-3 py-1 text-lg text-gray-700" aria-label="Diminuir quantidade" disabled>-</button>
+  <input id="qty-input" type="number" min="1" step="1" value="1" class="w-20 text-center border-l border-r px-2 py-1 focus-ring" disabled>
+  <button type="button" id="qty-increment" class="px-3 py-1 text-lg text-gray-700" aria-label="Aumentar quantidade" disabled>+</button>
+  </div>
+  <div class="text-sm text-gray-600">
+  Disponível: <span id="stock-available">-</span>
+  </div>
+ </div>
+ </div>
   
-  <div class="border-b pb-3">
-   <h1 class="text-2xl font-bold">{{ product.name }} - REF:: {{ product.id }}</h1>
-   <div class="flex items-center justify-between mt-3">
+  <div class="space-y-4 pt-4 border-t shipping-options-container">
+    <h3 class="font-bold text-lg text-primary-pink">Opções de Envio e Retirada</h3>
     
-    <div class="text-right">
-     {# Preço dinâmico: JS irá atualizar #}
-     <div class="text-sm" id="product-price-original">{% if product.discount_price and product.discount_price < product.price %}R$ {{ '%.2f' % product.price }}{% endif %}</div>
-     <div class="text-2xl font-extrabold text-primary-pink" id="product-price">R$ {{ '%.2f' % (product.discount_price if product.discount_price is not none else product.price) }}</div>
-    </div>
-   </div>
-  </div>
-
-  <div class="text-sm space-y-3">
-   <h3 class="font-bold text-gray-700">INFORMAÇÕES:</h3>
-   <p>{{ product.description }}</p>
-   
-   <h3 class="font-bold text-gray-700">CARACTERÍSTICAS PRINCIPAIS:</h3>
-   <ul class="list-disc list-inside text-gray-600 space-y-1">
-    {% for item in ["TECIDO RESPIRÁVEL", "PROTEÇÃO UV", "FLEXIBILIDADE"] %}
-     <li>{{ item }}</li>
-    {% endfor %}
-   </ul>
-  </div>
-  
-  <div class="space-y-4 border-t pt-4" id="selection-area">
-   <h3 class="font-bold text-lg text-primary-pink">Personalize seu Pedido</h3>
-      
-   <div class="space-y-2" id="size-options">
-    <h3 class="font-bold">TAMANHO:</h3>
-    <div class="flex gap-3">
-     {# CORRIGIDO: Agora itera APENAS sobre tamanhos com ESTOQUE INICIAL #}
-     {% for size in sizes %}
-      <label class="inline-flex items-center">
-       <input type="radio" name="size" value="{{ size }}" class="form-radio size-radio text-primary-pink focus:ring-primary-pink">
-       <span class="ml-2">{{ size }}</span>
-      </label>
-     {% endfor %}
-    </div>
-   </div>
-
-   <div class="space-y-2" id="color-options">
-    <h3 class="font-bold">COR:</h3>
-    <div class="flex gap-3 items-center">
-     {# CORRIGIDO: Agora itera APENAS sobre cores com ESTOQUE INICIAL #}
-     {% for color in colors %}
-      <label class="inline-flex items-center">
-       <input type="radio" name="color" value="{{ color }}" class="form-radio color-radio text-primary-pink focus:ring-primary-pink">
-       <span class="ml-2">{{ color }}</span>
-      </label>
-     {% endfor %}
-    </div>
-   </div>
-
-   {# QUANTIDADE: Este bloco é controlado pelo JS para mostrar o estoque real da variação selecionada #}
-   <div id="quantity-block" class="mt-3 flex items-center gap-3" aria-hidden="true">
-    <div class="flex items-center border rounded overflow-hidden">
-     <button type="button" id="qty-decrement" class="px-3 py-1 text-lg text-gray-700" aria-label="Diminuir quantidade" disabled>-</button>
-     <input id="qty-input" type="number" min="1" value="1" class="w-20 text-center border-l border-r px-2 py-1 focus-ring" disabled>
-     <button type="button" id="qty-increment" class="px-3 py-1 text-lg text-gray-700" aria-label="Aumentar quantidade" disabled>+</button>
-    </div>
-    <div class="text-sm text-gray-600">
-     Disponível: <span id="stock-available">-</span>
-    </div>
-   </div>
-  </div>
-      
-  <div class="space-y-4 pt-4 border-t">
-  <h3 class="font-bold text-lg text-primary-pink">Opções de Envio e Retirada</h3>
-  
-  <label for="option_pickup" class="block bg-primary-pink/10 p-4 rounded-md-lg border border-primary-pink/30 space-y-2 cursor-pointer hover:shadow-md transition">
-    <div class="flex justify-between items-start">
-      <div class="font-semibold flex items-center gap-2">
-        <input type="radio" id="option_pickup" name="shipping_option" value="pickup" class="form-radio text-primary-pink focus:ring-primary-pink mt-1">
-        <span class="text-gray-800 text-base font-semibold">📍 Retirar Pessoalmente (Grátis)</span>
+    <div id="cep-input-area" class="space-y-3">
+      <div class="font-bold text-base text-gray-700">Calcular Frete</div>
+      <div class="flex flex-col sm:flex-row gap-3 items-center">
+        <input id="detail-cep-input" type="text" placeholder="Digite o CEP (apenas números)" maxlength="8" inputmode="numeric" class="border rounded px-3 py-2 w-full sm:w-48 focus:ring-primary-pink focus:border-primary-pink">
+        <button id="detail-calc-shipping" type="button" class="btn-primary px-4 py-2 rounded w-full sm:w-auto font-medium">Calcular</button>
       </div>
-      <a href="#" class="text-primary-pink hover:text-primary-pink-dark text-sm font-medium whitespace-nowrap">
-        Ver Locais
-      </a>
+      
+      <!-- Mensagem de erro do CEP -->
+      <div id="detail-cep-error-message" class="hidden p-3 bg-red-50 rounded-lg border border-red-200 flex items-start gap-2">
+          <svg class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+          <div>
+              <div class="font-medium text-red-700">Não conseguimos encontrar esse CEP.</div>
+              <div class="text-sm text-red-600">Digite assim: <strong>65889560</strong></div>
+          </div>
+      </div>
+      
+      <a href="http://www.buscacep.correios.com.br/sistemas/buscacep/" target="_blank" class="text-primary-pink hover:underline text-sm">Não sei meu CEP</a>
     </div>
-    <p class="text-xs text-gray-600 mt-0.5">Compre online e retire em um ponto parceiro.</p>
-  </label>
-  
-  <label for="option_delivery" class="block bg-primary-pink/10 p-4 rounded-md-lg border border-primary-pink/30 space-y-2 cursor-pointer hover:shadow-md transition">
-    <div class="flex items-center gap-2 mb-2">
-      <input type="radio" id="option_delivery" name="shipping_option" value="delivery" class="form-radio text-primary-pink focus:ring-primary-pink">
-      <h3 class="font-bold text-gray-800">🚚 Envio para seu Endereço:</h3>
-    </div>
-    
-    <div id="cep-calculator" class="flex gap-2 hidden"> 
-      <input type="text" placeholder="Insira o CEP" class="w-full border rounded px-3 py-2 bg-white focus-ring">
-      <button class="btn-primary px-4 py-2 rounded">Calcular</button>
-    </div>
-  </label>
-</div>
 
-  
-  <textarea placeholder="Observações" class="w-full border rounded px-3 py-2 bg-gray-50 focus-ring h-20"></textarea>
+    <div id="cep-calculated-summary" class="hidden p-3 bg-primary-pink/10 rounded-lg border border-primary-pink/30">
+      <div class="flex items-center justify-between">
+        <span class="font-medium">
+          <span class="text-gray-600">Entregas para:</span>
+          <strong class="text-primary-pink ml-1" id="detail-current-cep-display"></strong>
+        </span>
+        <a href="#" id="detail-change-cep-btn" class="text-sm text-primary-pink hover:underline font-medium">Alterar CEP</a>
+      </div>
+    </div>
+
+    <div id="shipping-options-response" class="hidden space-y-3 list-none">
+      <h4 class="font-bold text-gray-800 text-sm uppercase tracking-wide">Escolha uma opção:</h4>
+      
+      <div class="group relative">
+        <label for="detail_option_pickup" class="js-shipping-radio list-item block p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 bg-gray-50 border-gray-300 hover:border-primary-pink/50">
+          <div class="flex items-start gap-3 w-full">
+            <input id="detail_option_pickup" class="shipping-method js-shipping-radio-input" data-price="0.00" data-code="pickup" type="radio" value="pickup" name="shipping_option_detail" required>
+            <div class="flex-1">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-gray-900 text-base">📍 Retirar Pessoalmente</h3>
+                <span class="text-xl font-extrabold text-green-600">GRÁTIS</span>
+              </div>
+              <p class="text-xs text-gray-600 mt-1">Compre online e retire em um ponto parceiro.</p>
+            </div>
+          </div>
+        </label>
+      </div>
+
+      <div id="detail-delivery-options-container" class="space-y-3 list-none">
+        </div>
+
+      <div id="detail-shipping-error" class="hidden p-3 bg-red-50 border border-red-300 rounded-lg text-red-700 text-sm font-medium"></div>
+
+    </div>
+  </div>
+   
  
  <button id="add-to-cart-btn"
-    data-product-id="{{ product.id }}"
-    data-product-name="{{ product.name|e }}"
-    data-product-price="{{ '%.2f' % (product.discount_price if product.discount_price is not none else product.price) }}"
-    class="btn-primary w-full py-3 rounded text-lg font-bold uppercase transition duration-200 mt-4"
-    disabled>
+  data-product-id="{{ product.id }}"
+  data-product-name="{{ product.name|e }}"
+  data-product-image="{{ main_img }}"
+  data-product-price="{{ '%.2f' % (product.discount_price if product.discount_price is not none else product.price) }}"
+  class="btn-primary w-full py-3 rounded text-lg font-bold uppercase transition duration-200 mt-4"
+  disabled>
  ADICIONAR AO CARRINHO
 </button>
 
-  <div class="flex flex-col gap-2 pt-2">
-  
-  <a href="https://wa.me/5599981629810" target="_blank" 
+ <div class="flex flex-col gap-2 pt-2">
+ 
+ <a href="https://wa.me/5599981629810" target="_blank" 
 class="w-full text-center border border-primary-pink text-primary-pink py-3 rounded transition duration-200 
-  hover:bg-primary-pink hover:text-white font-medium">
+ hover:bg-primary-pink hover:text-white font-medium">
  Falar com a Vendedora
 </a>
-  </div>
- 
-  <div class="text-sm pt-4 border-t space-y-2 text-gray-600">
-   <div class="flex items-center gap-2">
-    <span class="text-primary-pink">✓</span> Conheça nossa política de trocas e devoluções
-   </div>
-   <p>Atendimento ao cliente: +55 (99) 98162-9810</p>
-  </div>
-
  </div>
+
+ <div class="text-sm pt-4 border-t space-y-2 text-gray-600">
+ <div class="flex items-center gap-2">
+  <span class="text-primary-pink">✓</span> Conheça nossa política de trocas e devoluções
+ </div>
+ <p>Atendimento ao cliente: +55 (99) 98162-9810</p>
+ </div>
+
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const deliveryRadio = document.getElementById('option_delivery');
-  const pickupRadio = document.getElementById('option_pickup');
-  const cepCalculatorDiv = document.getElementById('cep-calculator');
-
-  function updateCalculatorVisibility() {
-    if (deliveryRadio.checked) {
-      cepCalculatorDiv.classList.remove('hidden');
-    } else {
-      cepCalculatorDiv.classList.add('hidden');
-    }
-  }
-
-  deliveryRadio.addEventListener('change', updateCalculatorVisibility);
-  pickupRadio.addEventListener('change', updateCalculatorVisibility);
-  
-  updateCalculatorVisibility(); 
-});
-</script>
+</div>
 
 {# Variants data para o JS: id/size/color/quantity/price #}
 <script>
- const PRODUCT_VARIANTS = [
-  {% for v in variants %}
-   { id: {{ v.id }}, size: "{{ v.size|e }}", color: "{{ v.color|e }}", quantity: {{ v.quantity }}, price: {{ v.price if v.price is not none else 'null' }} }{% if not loop.last %},{% endif %}
-  {% endfor %}
- ];
+const PRODUCT_VARIANTS = [
+{% for v in variants %}
+{ id: {{ v.id }}, size: "{{ v.size|e }}", color: "{{ v.color|e }}", quantity: {{ v.quantity }}, price: {{ v.price if v.price is not none else 'null' }} }{% if not loop.last %},{% endif %}
+{% endfor %}
+];
+</script>
+
+<script>
+// --- FUNÇÕES GLOBAIS DE FRETE PARA DETALHES DO PRODUTO ---
+if (!window.productDetailSetup) {
+    window.productDetailSetup = true; // Define a flag para garantir que só roda uma vez
+
+    const formatBRL = (value) => 'R$ ' + (typeof value === 'number' ? value.toFixed(2) : '0.00').replace('.', ',');
+
+    // Função de estilo adaptada para o detalhe do produto
+    window.updateShippingOptionStylesDetail = function() {
+        document.querySelectorAll('.js-shipping-radio').forEach(label => {
+            // Remove classes de destaque
+            label.classList.remove('ring-2', 'ring-green-500', 'ring-primary-pink', 'bg-green-100', 'bg-primary-pink/10', 'border-green-500', 'border-primary-pink', 'shadow-md');
+            
+            // Aplica estilos de base
+            if (label.querySelector('input[value="pickup"]')) {
+                label.classList.add('bg-gray-50', 'border-gray-300');
+            } else {
+                 label.classList.add('bg-white', 'border-gray-300');
+            }
+        });
+
+        // Aplica estilos ao selecionado
+        const selectedRadio = document.querySelector('input[name="shipping_option_detail"]:checked');
+        if (selectedRadio) {
+            const label = selectedRadio.closest('.js-shipping-radio');
+            if (label) {
+                const isPickup = selectedRadio.value === 'pickup';
+                const ringColor = isPickup ? 'ring-green-500' : 'ring-primary-pink';
+                const bgColor = isPickup ? 'bg-green-100' : 'bg-primary-pink/10';
+                const borderColor = isPickup ? 'border-green-500' : 'border-primary-pink';
+
+                label.classList.remove('bg-gray-50', 'bg-white', 'border-gray-300');
+                label.classList.add('ring-2', ringColor, bgColor, borderColor, 'shadow-md');
+            }
+        }
+    };
+    
+    // Função de cálculo de frete (Simulada, adaptada para o Detalhe do Produto)
+    window.calculateProductShipping = function() {
+        const cepInput = document.getElementById('detail-cep-input');
+        const cepErrorMessage = document.getElementById('detail-cep-error-message');
+        const cepCalculatedSummary = document.getElementById('cep-calculated-summary');
+        const cepInputArea = document.getElementById('cep-input-area');
+        const currentCepDisplay = document.getElementById('detail-current-cep-display');
+        const shippingOptionsResponse = document.getElementById('shipping-options-response');
+        const deliveryOptionsContainer = document.getElementById('detail-delivery-options-container');
+        const errorDiv = document.getElementById('detail-shipping-error');
+        const calcBtn = document.getElementById('detail-calc-shipping');
+        
+        if (!cepInput) return;
+        const cep = cepInput.value.trim().replace(/\D/g, '');
+        const originalText = calcBtn ? calcBtn.textContent : 'Calcular';
+
+        if (cep.length !== 8) {
+            cepErrorMessage && cepErrorMessage.classList.remove('hidden');
+            return;
+        }
+
+        // Validação básica do CEP
+        if (cep === '00000000') {
+            cepErrorMessage && cepErrorMessage.classList.remove('hidden');
+            alert("CEP inválido. Digite um CEP válido como: 65889560");
+            return;
+        }
+
+        // Ocultar mensagem de erro
+        cepErrorMessage && cepErrorMessage.classList.add('hidden');
+
+        if (calcBtn) { calcBtn.disabled = true; calcBtn.textContent = 'Calculando...'; }
+        deliveryOptionsContainer && (deliveryOptionsContainer.innerHTML = '<div class="p-3 text-center text-gray-600">Buscando opções...</div>');
+        errorDiv && errorDiv.classList.add('hidden');
+
+        fetch('/api/calculate-shipping', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cep: cep, method: 'delivery' })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const shippingCost = (data.shipping_cost || 0);
+                const deliveryHTML = `
+                    <div class="js-shipping-list-item radio-button-item w-full">
+                        <label for="detail_option_delivery" class="js-shipping-radio list-item block p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:border-primary-pink/50 bg-white border-gray-300">
+                            <div class="flex items-start gap-3 w-full">
+                                <input id="detail_option_delivery" class="shipping-method js-shipping-radio-input" 
+                                       data-price="${shippingCost}" data-code="delivery" data-name="Entrega para seu Endereço" 
+                                       type="radio" value="delivery" name="shipping_option_detail" required>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <h3 class="font-bold text-gray-900 text-base">📦 Entrega para seu Endereço</h3>
+                                        <span class="text-xl font-extrabold text-primary-pink">${formatBRL(shippingCost)}</span>
+                                    </div>
+                                    <div class="text-xs text-gray-500">Distância: ${(data.distance_km || 0).toFixed(1)} km</div>
+                                    <div class="text-xs text-gray-500">${data.message || 'Frete calculado com sucesso'}</div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>`;
+                deliveryOptionsContainer && (deliveryOptionsContainer.innerHTML = deliveryHTML);
+                currentCepDisplay && (currentCepDisplay.textContent = cep.substring(0,5) + '-' + cep.substring(5));
+                cepInputArea && cepInputArea.classList.add('hidden');
+                cepCalculatedSummary && cepCalculatedSummary.classList.remove('hidden');
+                shippingOptionsResponse && shippingOptionsResponse.classList.remove('hidden');
+                const deliveryRadio = document.getElementById('detail_option_delivery');
+                if (deliveryRadio) deliveryRadio.checked = true;
+                window.updateShippingOptionStylesDetail();
+            } else {
+                cepErrorMessage && cepErrorMessage.classList.remove('hidden');
+                deliveryOptionsContainer && (deliveryOptionsContainer.innerHTML = '');
+                shippingOptionsResponse && shippingOptionsResponse.classList.add('hidden');
+                document.getElementById('detail_option_pickup').checked = true;
+                window.updateShippingOptionStylesDetail();
+            }
+        })
+        .catch(() => {
+            cepErrorMessage && cepErrorMessage.classList.remove('hidden');
+            deliveryOptionsContainer && (deliveryOptionsContainer.innerHTML = '');
+            shippingOptionsResponse && shippingOptionsResponse.classList.add('hidden');
+        })
+        .finally(() => {
+            if (calcBtn) { calcBtn.disabled = false; calcBtn.textContent = originalText; }
+        });
+    };
+
+    // --- CÓDIGO DE DETALHE DE PRODUTO ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // VARIÁVEIS PRINCIPAIS (mantidas)
+        const variants = PRODUCT_VARIANTS || [];
+        const sizeRadios = document.querySelectorAll('.size-radio');
+        const colorRadios = document.querySelectorAll('.color-radio');
+        const qtyInput = document.getElementById('qty-input');
+        const btnAdd = document.getElementById('add-to-cart-btn');
+        const priceEl = document.getElementById('product-price');
+        const decBtn = document.getElementById('qty-decrement');
+        const incBtn = document.getElementById('qty-increment');
+        const stockSpan = document.getElementById('stock-available');
+        
+        let selectedSize = null;
+        let selectedColor = null;
+        let selectedVariant = null;
+
+        // --- FUNÇÕES UTILITÁRIAS (normalizeQty, findVariant, updateQtyButtons) ---
+
+        // (Suas funções utilitárias aqui)
+        function normalizeQty(val){
+            let n = Number(val);
+            if (!isFinite(n) || isNaN(n)) n = 1;
+            n = Math.round(n);
+            if(n < 1) n = 1;
+            return n;
+        }
+
+        function findVariant() {
+            if(!selectedSize || !selectedColor) return null;
+            return variants.find(v => v.size === selectedSize && v.color === selectedColor) || null;
+        }
+
+        function updateQtyButtons(){
+            const max = parseInt(qtyInput.max || '1', 10);
+            let cur = normalizeQty(qtyInput.value);
+            
+            cur = Math.min(max, cur);
+            qtyInput.value = cur;
+            
+            if(decBtn) decBtn.disabled = qtyInput.value <= 1 || qtyInput.disabled;
+            if(incBtn) incBtn.disabled = qtyInput.value >= max || qtyInput.disabled;
+        }
+
+        function updateSelection() {
+            selectedVariant = findVariant();
+            if(selectedVariant) {
+                const max_qty = Math.max(1, selectedVariant.quantity);
+                qtyInput.disabled = false;
+                qtyInput.value = 1;
+                qtyInput.max = max_qty;
+                
+                if(stockSpan) stockSpan.textContent = selectedVariant.quantity;
+                btnAdd.disabled = selectedVariant.quantity === 0;
+
+                const p = (selectedVariant.price !== null && selectedVariant.price !== undefined) ? selectedVariant.price : parseFloat(btnAdd.dataset.productPrice || 0);
+                if(priceEl) priceEl.textContent = 'R$ ' + p.toFixed(2).replace('.', ',');
+            } else {
+                qtyInput.disabled = true;
+                qtyInput.value = 1;
+                qtyInput.max = 1;
+                btnAdd.disabled = true;
+                if(stockSpan) stockSpan.textContent = '0';
+            }
+            updateQtyButtons();
+        }
+
+        // --- LISTENERS DE SELEÇÃO DE TAMANHO/COR (MANTIDOS) ---
+
+        sizeRadios.forEach(r => r.addEventListener('change', (e) => {
+            selectedSize = e.target.value;
+            updateSelection();
+        }));
+        colorRadios.forEach(r => r.addEventListener('change', (e) => {
+            selectedColor = e.target.value;
+            updateSelection();
+        }));
+        
+        // --- LISTENERS DE INCREMENTO/DECREMENTO (MANTIDOS) ---
+        
+        if(decBtn) decBtn.addEventListener('click', () => {
+            if(qtyInput.disabled) return;
+            let cur = normalizeQty(qtyInput.value);
+            cur = Math.max(1, cur - 1);
+            qtyInput.value = cur;
+            updateQtyButtons();
+        });
+
+        if(incBtn) incBtn.addEventListener('click', () => {
+            if(qtyInput.disabled) return;
+            const max = parseInt(qtyInput.max || '1', 10);
+            let cur = normalizeQty(qtyInput.value);
+            cur = Math.min(max, cur + 1);
+            qtyInput.value = cur;
+            updateQtyButtons();
+        });
+        
+        // Listener para quando o usuário digita manualmente
+        if(qtyInput) qtyInput.addEventListener('input', (e) => {
+            let val = normalizeQty(e.target.value);
+            const max = parseInt(qtyInput.max || '1', 10);
+            if(val > max) val = max;
+            qtyInput.value = val;
+            updateQtyButtons();
+        });
+        
+        // --- LISTENERS DE CARRINHO (MANTIDOS) ---
+        
+        function getCart() {
+            try { return JSON.parse(localStorage.getItem('cart_v1') || '[]'); } catch(e){ return []; }
+        }
+        function saveCart(c) { 
+            localStorage.setItem('cart_v1', JSON.stringify(c)); 
+            window.dispatchEvent(new Event('storage')); 
+        }
+
+        btnAdd.addEventListener('click', () => {
+            if(!selectedVariant) return alert('Selecione tamanho e cor.');
+            if(selectedVariant.quantity === 0) return alert('Produto esgotado.');
+
+            const qty = Math.max(1, Math.min(parseInt(qtyInput.value || '1'), selectedVariant.quantity));
+            const cart = getCart();
+            const existing = cart.find(i => i.variant_id === selectedVariant.id);
+            
+            const itemPrice = (selectedVariant.price !== null && selectedVariant.price !== undefined) ? selectedVariant.price : parseFloat(btnAdd.dataset.productPrice || 0);
+
+            if(existing) {
+                existing.qty = Math.min(selectedVariant.quantity, existing.qty + qty);
+            } else {
+                cart.push({
+                    product_id: parseInt(btnAdd.dataset.productId),
+                    variant_id: selectedVariant.id,
+                    name: btnAdd.dataset.productName || '',
+                    image: btnAdd.dataset.productImage || 'placeholder.jpg',
+                    size: selectedVariant.size,
+                    color: selectedVariant.color,
+                    price: itemPrice,
+                    qty: qty,
+                    max: selectedVariant.quantity
+                });
+            }
+            saveCart(cart);
+            window.location.href = '/cart';
+        });
+        
+        // Inicialização da Galeria de Imagens (MANTIDA)
+        const detailMain = document.getElementById('detail-main-image');
+        const thumbs = document.querySelectorAll('#detail-thumbs .thumb-btn');
+        thumbs.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const src = btn.dataset.src;
+                if (detailMain && src) {
+                    detailMain.src = src;
+                    thumbs.forEach(b => b.classList.remove('ring-2', 'ring-primary-pink'));
+                    btn.classList.add('ring-2', 'ring-primary-pink');
+                }
+            });
+        });
+
+        // --- LISTENERS DE FRETE ---
+        const cepInput = document.getElementById('detail-cep-input');
+        const calcBtn = document.getElementById('detail-calc-shipping');
+        const changeCepBtn = document.getElementById('detail-change-cep-btn');
+        const pickupRadio = document.getElementById('detail_option_pickup');
+        const shippingOptionsResponse = document.getElementById('shipping-options-response');
+
+
+        if (calcBtn) {
+            calcBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.calculateProductShipping();
+            });
+        }
+        
+        if (changeCepBtn) {
+            changeCepBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('cep-input-area') && document.getElementById('cep-input-area').classList.remove('hidden');
+                document.getElementById('cep-calculated-summary') && document.getElementById('cep-calculated-summary').classList.add('hidden');
+                shippingOptionsResponse && shippingOptionsResponse.classList.add('hidden');
+                cepInput && cepInput.focus();
+            });
+        }
+
+        // Listener de delegação para as opções de frete (garante que Retirada e Entrega tenham estilo)
+        if (shippingOptionsResponse) {
+            shippingOptionsResponse.addEventListener('change', (e) => {
+                if (e.target.name === 'shipping_option_detail') {
+                    window.updateShippingOptionStylesDetail();
+                }
+            });
+        }
+        
+        // Inicializa estilos na Retirada ao carregar
+        if (pickupRadio) {
+            pickupRadio.checked = true; // Define Retirada como padrão
+            window.updateShippingOptionStylesDetail();
+        }
+    });
+}
 </script>
 
 {% endblock %}
