@@ -14,7 +14,7 @@
     function updateShippingOptionStyles() {
         document.querySelectorAll('.js-shipping-radio').forEach(label => {
             label.classList.remove('ring-2', 'ring-green-500', 'ring-primary-pink', 'bg-green-100', 'bg-primary-pink/10', 'border-green-500', 'border-primary-pink', 'shadow-md');
-            
+
             if (label.querySelector('input[value="pickup"]')) {
                 label.classList.add('bg-gray-50', 'border-gray-300');
             } else {
@@ -129,7 +129,7 @@
                     errorDiv && errorDiv.classList.remove('hidden');
                     deliveryOptionsContainer && (deliveryOptionsContainer.innerHTML = '');
                     shippingOptionsResponse && shippingOptionsResponse.classList.add('hidden');
-                    
+
                     // Falha no cálculo: garante que a Retirada seja selecionada
                     document.getElementById('option_pickup').checked = true;
                     updateShippingOptionStyles();
@@ -141,7 +141,7 @@
                 errorDiv && errorDiv.classList.remove('hidden');
                 deliveryOptionsContainer && (deliveryOptionsContainer.innerHTML = '');
                 shippingOptionsResponse && shippingOptionsResponse.classList.add('hidden');
-                
+
                 // Falha total: garante que a Retirada seja selecionada
                 document.getElementById('option_pickup').checked = true;
                 updateShippingOptionStyles();
@@ -179,26 +179,28 @@
             const itemTotal = (item.price || 0) * item.qty;
             subtotal += itemTotal;
             const div = document.createElement('div');
-            div.className = 'flex items-center justify-between p-3 bg-white border rounded';
+            div.className = 'flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-white border rounded';
 
             const imgFile = item.image || 'placeholder.jpg';
             const imgSrc = '/static/images/' + imgFile;
 
             // Renderização do Item
             div.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <img src="${imgSrc}" alt="${(item.name || '')}" class="w-16 h-16 object-cover rounded border" onerror="this.src='/static/images/placeholder.jpg'">
-                    <div>
-                        <div class="font-medium">${item.name}</div>
-                        <div class="text-xs text-gray-500">${formatBRL(item.price || 0)} × ${item.qty} = ${formatBRL(itemTotal)}</div>
-                        <div class="text-xs text-gray-400">${item.size} / ${item.color}</div>
+                <div class="flex items-start gap-3 flex-1">
+                    <img src="${imgSrc}" alt="${(item.name || '')}" class="w-20 h-20 object-cover rounded border flex-shrink-0" onerror="this.src='/static/images/placeholder.jpg'">
+                    <div class="flex-1 min-w-0">
+                        <div class="font-bold text-gray-900">${item.name}</div>
+                        <div class="text-sm text-gray-600 mt-1">${item.size} / ${item.color}</div>
+                        <div class="text-sm font-semibold text-primary-pink mt-2">${formatBRL(item.price || 0)} × ${item.qty} = ${formatBRL(itemTotal)}</div>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button class="qty-decr px-2 py-1 border rounded" data-id="${item.variant_id}">-</button>
-                    <input type="number" class="w-16 text-center border px-2 py-1 qty-input" data-id="${item.variant_id}" value="${item.qty}" min="1" max="${item.max}">
-                    <button class="qty-incr px-2 py-1 border rounded" data-id="${item.variant_id}">+</button>
-                    <button class="remove-item text-red-500 ml-2" title="Remover" data-id="${item.variant_id}">
+                <div class="flex items-center gap-2 flex-wrap justify-end w-full sm:w-auto">
+                    <div class="flex items-center gap-1 border rounded-lg p-1 bg-gray-50">
+                        <button class="qty-decr px-3 py-1 hover:bg-gray-200 rounded transition font-bold" data-id="${item.variant_id}">−</button>
+                        <input type="number" class="w-12 text-center border-0 bg-white px-1 py-1 qty-input" data-id="${item.variant_id}" value="${item.qty}" min="1" max="${item.max}">
+                        <button class="qty-incr px-3 py-1 hover:bg-gray-200 rounded transition font-bold" data-id="${item.variant_id}">+</button>
+                    </div>
+                    <button class="remove-item text-red-500 hover:text-red-700 transition p-2" title="Remover" data-id="${item.variant_id}">
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14" /></svg>
                     </button>
                 </div>
