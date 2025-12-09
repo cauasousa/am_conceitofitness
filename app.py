@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, inspect
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship, joinedload
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -71,6 +71,7 @@ class Classification(Base):
   __tablename__ = "classifications"
   id = Column(Integer, primary_key=True)
   name = Column(String(150), nullable=False, unique=True)
+  display_order = Column(Integer, default=0)
   products = relationship("Product", back_populates="classification", cascade="all")
 
 
@@ -91,8 +92,22 @@ def ensure_admin():
       db.commit()
       print(f"[setup] Admin criado: {admin_user} (senha a partir de ADMIN_PASSWORD)")
 
+def ensure_classification_order_column():
+  """Adds display_order column to classifications if missing (SQLite/Postgres safe)."""
+  insp = inspect(engine)
+  cols = [c['name'] for c in insp.get_columns('classifications')]
+  if 'display_order' in cols:
+    return
+  try:
+    with engine.begin() as conn:
+      conn.exec_driver_sql("ALTER TABLE classifications ADD COLUMN display_order INTEGER DEFAULT 0")
+    print("[setup] Column display_order added to classifications")
+  except Exception as e:
+    print(f"[setup] Could not add display_order column: {e}")
+
 # chamada de inicialização
 ensure_admin()
+ensure_classification_order_column()
 
 app = Flask(__name__)
 app.secret_key = SECRET
@@ -279,7 +294,7 @@ def calculate_shipping():
             'shipping_cost': round(shipping_cost, 2),
             'distance_km': round(distance_km, 2),
             # 'message': f'Frete para {distance_km:.1f} km: R$ {shipping_cost:.2f}'
-            'message': f'Chega entre entre 3 a 7 dias úteis.'
+            'message': f'Chega entre entre 1 a 7 dias úteis.'
         })
     
     except Exception as e:
@@ -300,15 +315,39 @@ def index():
   q = (request.args.get('q') or "").strip()
   with SessionLocal() as db:
     # Eager load de imagens e variações para uso direto nos templates
-    base_stmt = select(Product).options(joinedload(Product.images), joinedload(Product.stock_variants))
+    base_stmt = select(Product).options(
+      joinedload(Product.images),
+      joinedload(Product.stock_variants),
+      joinedload(Product.classification)
+    )
     if q:
       stmt = base_stmt.filter(Product.name.ilike(f"%{q}%"))
     else:
       stmt = base_stmt
     products = db.scalars(stmt).unique().all()
+    classifications = db.scalars(select(Classification).order_by(Classification.display_order, Classification.name)).all()
+
+  # Agrupa produtos por classificação para exibição na home
+  grouped_products = []
+  for c in classifications:
+    classified = [p for p in products if p.classification and p.classification.id == c.id]
+    if classified:
+      grouped_products.append({"id": c.id, "name": c.name, "products": classified})
+
+  # Inclui produtos sem classificação explícita
+  uncategorized = [p for p in products if not p.classification]
+  if uncategorized:
+    grouped_products.append({"id": None, "name": "Outros", "products": uncategorized})
   brand = "Conforto, autocuidado e amor próprio!🌷🤍"
   insta = "@am_conceitofitness"
-  return render_template("index.html", products=products, brand=brand, insta=insta, q=q)
+  return render_template(
+    "index.html",
+    products=products,
+    grouped_products=grouped_products,
+    brand=brand,
+    insta=insta,
+    q=q
+  )
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -389,7 +428,7 @@ def admin_dashboard():
     else:
       stmt = base_stmt
     products = db.scalars(stmt).unique().all()
-    classifications = db.scalars(select(Classification)).all()
+    classifications = db.scalars(select(Classification).order_by(Classification.display_order, Classification.name)).all()
   return render_template("admin.html", products=products, classifications=classifications, q=q)
   # note: template admin.html agora recebe 'classifications' — abaixo ajustaremos template
 
@@ -412,7 +451,9 @@ def admin_add_classification():
     if exists:
       flash("Classificação já existe")
       return redirect(url_for("admin_dashboard"))
-    c = Classification(name=name)
+    # define ordem como último + 1
+    max_order = db.scalar(select(Classification.display_order).order_by(Classification.display_order.desc()).limit(1)) or 0
+    c = Classification(name=name, display_order=max_order + 1)
     db.add(c)
     db.commit()
   flash("Classificação criada")
@@ -674,6 +715,25 @@ def admin_delete_classification(class_id):
     
     flash(f"Classificação '{class_name}' deletada com sucesso!")
     return redirect(url_for("admin_dashboard"))
+
+@app.route("/admin/reorder_classifications", methods=["POST"])
+@admin_required
+def admin_reorder_classifications():
+  """Atualiza display_order das classificações a partir do formulário."""
+  with SessionLocal() as db:
+    classifications = db.scalars(select(Classification)).all()
+    for c in classifications:
+      field = f"order_{c.id}"
+      val = request.form.get(field)
+      if val is None:
+        continue
+      try:
+        c.display_order = int(val)
+      except ValueError:
+        continue
+    db.commit()
+  flash("Ordem das classificações atualizada")
+  return redirect(url_for("admin_dashboard"))
 
 @app.route("/logout")
 def logout():

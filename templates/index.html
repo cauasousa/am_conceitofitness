@@ -28,7 +28,7 @@
           </p>
           
           <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <a href="#produtos" class="bg-white text-primary-pink px-8 py-3 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+            <a href="#classificacao-tops" class="bg-white text-primary-pink px-8 py-3 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 scroll-to-section">
               Ver Produtos
             </a>
             <a href="https://wa.me/5599981629810" target="_blank" class="bg-green-500 text-white px-8 py-3 rounded-full font-bold text-lg shadow-lg hover:bg-green-600 hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2">
@@ -96,6 +96,156 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* Conheça Produtos (cores da marca) */
+.conheca-produtos {
+  margin: 0 0 32px 0;
+  position: relative;
+  z-index: 1;
+}
+
+.conheca-produtos__scroll {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.conheca-produtos__item {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(var(--primary-pink-rgb), 0.25);
+  box-shadow: 0 10px 26px rgba(0,0,0,0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.conheca-produtos__item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 38px rgba(0,0,0,0.12);
+  border-color: rgba(var(--primary-pink-rgb), 0.45);
+}
+
+.conheca-produtos__img-wrapper {
+  position: relative;
+  height: 240px;
+  background: rgba(var(--primary-pink-rgb), 0.06);
+}
+
+.conheca-produtos__img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.conheca-produtos__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(30,30,30,0.75) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 16px;
+  color: #fff;
+  transition: background 0.3s ease;
+}
+
+.conheca-produtos__item:hover .conheca-produtos__overlay {
+  background: linear-gradient(180deg, rgba(221,168,160,0.08) 0%, rgba(221,168,160,0.8) 100%);
+}
+
+.conheca-produtos__titulo {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.conheca-produtos__subtitulo {
+  font-size: 13px;
+  color: #f1f5f9;
+}
+
+.conheca-produtos__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  background: #fff;
+  color: var(--primary-pink);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.12);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.conheca-produtos__item:hover .conheca-produtos__btn {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(0,0,0,0.16);
+  background: #fff;
+}
+
+@media (max-width: 640px) {
+  .conheca-produtos__img-wrapper { height: 200px; }
+  .conheca-produtos__scroll { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+}
+
+/* Destaques (banner de benefícios) */
+.highlights-wrapper {
+  padding: 18px 18px;
+  background: rgba(var(--primary-pink-rgb), 0.08);
+  border: 1px solid rgba(var(--primary-pink-rgb), 0.2);
+}
+
+.container-destaques {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.destaque-item {
+  flex: 1 1 220px;
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid rgba(var(--primary-pink-rgb), 0.18);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+}
+
+.icon-destaque img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.title-destaque {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--primary-pink);
+}
+
+.description-destaque {
+  font-size: 12px;
+  color: #4B5563;
+}
+
+@media (max-width: 1024px) {
+  .container-destaques {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+
+  .destaque-item {
+    flex: 0 0 220px;
+  }
+}
 </style>
 
 <script>
@@ -157,65 +307,202 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Inicia o autoplay
   startAutoplay();
+
+  // Smooth scroll para seções de classificação
+  document.querySelectorAll('.scroll-to-section').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const targetId = this.getAttribute('href');
+      const targetElement = document.querySelector(targetId);
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
 });
 </script>
 
+<!-- Destaques da loja -->
+<div class="highlights-wrapper rounded-2xl shadow-lg mb-10">
+  <div class="container-destaques no-scrollbar">
+    <div class="destaque-item">
+      <div class="icon-destaque">
+        <img alt="Frete grátis" src="{{ url_for('static', filename='images/quality-icon2.svg') }}">
+      </div>
+      <div class="content-destaque">
+        <span class="title-destaque">Qualidade</span>
+      </div>
+    </div>
+
+    <div class="destaque-item">
+      <div class="icon-destaque">
+        <img alt="Parcelamento" src="{{ url_for('static', filename='images/payment-security-icon.svg') }}">
+      </div>
+      <div class="content-destaque">
+        <span class="title-destaque">Pagamento 100% seguro</span>
+      </div>
+    </div>
+
+    <div class="destaque-item">
+      <div class="icon-destaque">
+        <img alt="1ª troca grátis" src="{{ url_for('static', filename='images/guarantee-icon.svg') }}">
+      </div>
+      <div class="content-destaque">
+        <span class="title-destaque">Satisfação garantida</span>
+      </div>
+    </div>
+
+    <div class="destaque-item">
+      <div class="icon-destaque">
+        <img alt="Entrega garantida" src="{{ url_for('static', filename='images/truck-icon.svg') }}"> 
+      </div>
+      <div class="content-destaque">
+        <span class="title-destaque">Entrega garantida</span>
+      </div>
+    </div>
+  </div>
+</div>
+<section class="conheca-produtos">
+  <div class="container">
+    
+      <header class="section__header mb-6">
+        <div class="text-container text-center">
+          <h2 class="heading heading--small heading-tracado text-center">o que você está procurando?</h2>
+          <div class="mx-auto mt-2 w-12 h-0.5 bg-black"></div>
+        </div>
+      </header>
+    
+
+    <div class="conheca-produtos__scroll">
+      
+        <a href="#classificacao-leggings" class="conheca-produtos__item scroll-to-section">
+          
+            <div class="conheca-produtos__img-wrapper">
+              <img src="{{ url_for('static', filename='images/Leggings-foto.jpeg') }}?width=600" alt="Imagem 1" loading="lazy">
+              <div class="conheca-produtos__overlay">
+                <h3 class="conheca-produtos__titulo">Legging's</h3>
+                <p class="conheca-produtos__subtitulo">Zero transparência</p>
+                <span class="conheca-produtos__btn">VER MAIS</span>
+              </div>
+            </div>
+          
+        </a>
+      
+        <a href="#classificacao-tops" class="conheca-produtos__item scroll-to-section">
+          
+            <div class="conheca-produtos__img-wrapper">
+              <img src="{{ url_for('static', filename='images/tops-foto.jpeg') }}?width=600" alt="Imagem 2" loading="lazy">
+              <div class="conheca-produtos__overlay">
+                <h3 class="conheca-produtos__titulo">Top's</h3>
+                <p class="conheca-produtos__subtitulo">Para combinar</p>
+                <span class="conheca-produtos__btn">VER MAIS</span>
+              </div>
+            </div>
+          
+        </a>
+      
+        <a href="#classificacao-shorts" class="conheca-produtos__item scroll-to-section">
+          
+            <div class="conheca-produtos__img-wrapper">
+              <img src="{{ url_for('static', filename='images/short-foto.jpeg') }}?width=600" alt="Imagem 3" loading="lazy">
+              <div class="conheca-produtos__overlay">
+                <h3 class="conheca-produtos__titulo">Short's</h3>
+                <p class="conheca-produtos__subtitulo">Versáteis e confortáveis</p>
+                <span class="conheca-produtos__btn">VER MAIS</span>
+              </div>
+            </div>
+          
+        </a>
+      
+        <a href="#classificacao-blusas-e-regatas" class="conheca-produtos__item scroll-to-section">
+          
+            <div class="conheca-produtos__img-wrapper">
+              <img src="{{ url_for('static', filename='images/regata-foto.png') }}?width=600" alt="Imagem 4" loading="lazy">
+              <div class="conheca-produtos__overlay">
+                <h3 class="conheca-produtos__titulo">Blusas e Regatas</h3>
+                <p class="conheca-produtos__subtitulo">Complete seu look</p>
+                <span class="conheca-produtos__btn">VER MAIS</span>
+              </div>
+            </div>
+          
+        </a>
+      
+    </div>
+  </div>
+</section>
 <!-- Search Bar -->
 <form method="get" class="mb-8">
   <div class="flex gap-2 max-w-md">
     <input name="q" type="search" placeholder="Pesquisar produto por nome..." value="{{ q|default('') }}" class="w-full border rounded px-3 py-2 focus-ring" />
     <button type="submit" class="btn-primary px-4 py-2 rounded">Buscar</button>
+    {% if q %}
+    <a href="{{ url_for('index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded transition flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+      Limpar
+    </a>
+    {% endif %}
   </div>
 </form>
 
-<h2 id="produtos" class="text-3xl font-extrabold mb-8 text-primary-pink">Produtos em Destaque</h2>
+{% if grouped_products %}
+  {% for group in grouped_products %}
+    {% set section_id = 'classificacao-' + group.name|lower|replace(' ', '-')|replace("'", '')|replace('ã', 'a')|replace('õ', 'o')|replace('á', 'a')|replace('é', 'e')|replace('í', 'i')|replace('ó', 'o')|replace('ú', 'u') %}
+    <div class="flex items-center justify-between mt-10 mb-4" id="{{ section_id }}"{% if loop.first %} data-first-section="true"{% endif %}>
+      <h2 class="text-3xl font-extrabold text-primary-pink">{{ group.name }}</h2>
+    </div>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-  {% for p in products %}
-    {# constrói lista de imagens a partir de product.images; fallback para placeholder #}
-    {% set images_list = p.images|map(attribute='image_url')|list %}
-    {% if images_list|length == 0 %}
-      {% set images_list = ['placeholder.jpg'] %}
-    {% endif %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10">
+      {% for p in group.products %}
+        {# constrói lista de imagens a partir de product.images; fallback para placeholder #}
+        {% set images_list = p.images|map(attribute='image_url')|list %}
+        {% if images_list|length == 0 %}
+          {% set images_list = ['placeholder.jpg'] %}
+        {% endif %}
 
-    <article class="bg-white p-4 rounded-md shadow-card card-product transform transition-all duration-300">
-      <div class="relative mb-3">
-        <div class="overflow-hidden rounded-md">
-          <div class="carousel-track flex snap-x snap-mandatory no-scrollbar overflow-x-scroll" data-product-id="{{ p.id }}">
-            {% for img_url in images_list %}
-              <div class="carousel-item flex-shrink-0 snap-start w-full">
-                <a href="{{ url_for('product_detail', product_id=p.id) }}" class="block group" aria-label="Ver detalhes de {{ p.name }}">
-                  <img src="{{ url_for('static', filename='images/' + img_url) }}" alt="{{ p.name }}" class="w-full h-56 object-cover rounded-md shadow-sm">
-                </a>
+        <article class="bg-white p-4 rounded-md shadow-card card-product transform transition-all duration-300">
+          <div class="relative mb-3">
+            <div class="overflow-hidden rounded-md">
+              <div class="carousel-track flex snap-x snap-mandatory no-scrollbar overflow-x-scroll" data-product-id="{{ p.id }}">
+                {% for img_url in images_list %}
+                  <div class="carousel-item flex-shrink-0 snap-start w-full">
+                    <a href="{{ url_for('product_detail', product_id=p.id) }}" class="block group" aria-label="Ver detalhes de {{ p.name }}">
+                      <img src="{{ url_for('static', filename='images/' + img_url) }}" alt="{{ p.name }}" class="w-full h-56 object-cover rounded-md shadow-sm">
+                    </a>
+                  </div>
+                {% endfor %}
               </div>
-            {% endfor %}
+            </div>
+
+            <button class="carousel-prev absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full shadow hidden sm:inline-flex" aria-label="Anterior">‹</button>
+            <button class="carousel-next absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full shadow hidden sm:inline-flex" aria-label="Próximo">›</button>
           </div>
-        </div>
 
-        <button class="carousel-prev absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full shadow hidden sm:inline-flex" aria-label="Anterior">‹</button>
-        <button class="carousel-next absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full shadow hidden sm:inline-flex" aria-label="Próximo">›</button>
-      </div>
+          <div class="flex justify-between items-start mb-1">
+            <h2 class="text-lg font-bold truncate">{{ p.name }}</h2>
+            <div class="text-right">
+              {% if p.discount_price and p.discount_price < p.price %}
+                <div class="text-sm text-gray-500 line-through">R$ {{ '%.2f' % p.price }}</div>
+                <div class="font-extrabold text-lg text-primary-pink">R$ {{ '%.2f' % p.discount_price }}</div>
+              {% else %}
+                <div class="font-extrabold text-lg text-primary-pink">R$ {{ '%.2f' % p.price }}</div>
+              {% endif %}
+            </div>
+          </div>
 
-      <div class="flex justify-between items-start mb-1">
-        <h2 class="text-lg font-bold truncate">{{ p.name }}</h2>
-        <div class="text-right">
-          {% if p.discount_price and p.discount_price < p.price %}
-            <div class="text-sm text-gray-500 line-through">R$ {{ '%.2f' % p.price }}</div>
-            <div class="font-extrabold text-lg text-primary-pink">R$ {{ '%.2f' % p.discount_price }}</div>
-          {% else %}
-            <div class="font-extrabold text-lg text-primary-pink">R$ {{ '%.2f' % p.price }}</div>
-          {% endif %}
-        </div>
-      </div>
+          <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ p.description }}</p>
 
-      <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ p.description }}</p>
-
-      <div class="flex gap-3">
-        <a href="{{ url_for('product_detail', product_id=p.id) }}" class="btn-primary text-center px-4 py-2 rounded-md flex-1 text-sm font-medium">Comprar</a>
-       
-      </div>
-    </article>
+          <div class="flex gap-3">
+            <a href="{{ url_for('product_detail', product_id=p.id) }}" class="btn-primary text-center px-4 py-2 rounded-md flex-1 text-sm font-medium">Comprar</a>
+          
+          </div>
+        </article>
+      {% endfor %}
+    </div>
   {% endfor %}
-</div>
+{% else %}
+  <p class="text-gray-600 mt-6">Nenhum produto encontrado.</p>
+{% endif %}
 {% endblock %}
 

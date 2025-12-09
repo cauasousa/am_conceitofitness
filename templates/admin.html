@@ -468,25 +468,29 @@
       </h4>
 
       {% if classifications %}
-      <div class="space-y-3 max-h-72 overflow-y-auto">
+      <form action="{{ url_for('admin_reorder_classifications') }}" method="post" class="space-y-3 max-h-72 overflow-y-auto">
         {% for c in classifications %}
-        <div class="bg-gray-50 rounded-lg p-3 border-2 border-gray-200 hover:border-primary-pink transition">
-          <div class="flex items-center justify-between">
+        <div class="bg-gray-50 rounded-lg p-3 border-2 border-gray-200 hover:border-primary-pink transition flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <input type="number" name="order_{{ c.id }}" value="{{ c.display_order or 0 }}" class="w-16 border-2 border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-primary-pink focus:border-primary-pink text-center" aria-label="Ordem de {{ c.name }}">
             <div>
               <span class="font-semibold text-gray-800">{{ c.name }}</span>
               <span class="badge badge-info ml-2">{{ products|selectattr('classification','equalto', c)|list|length }}</span>
             </div>
-            <form action="{{ url_for('admin_delete_classification', class_id=c.id) }}" method="post" style="display: inline;">
-              <button type="submit" class="text-red-500 hover:text-red-700 transition text-sm font-medium" onclick="return confirm('Deletar esta classificação?')">
-                <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                </svg>
-              </button>
-            </form>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="submit" class="text-red-500 hover:text-red-700 transition text-sm font-medium"
+              formaction="{{ url_for('admin_delete_classification', class_id=c.id) }}" formmethod="post"
+              onclick="return confirm('Deletar esta classificação?')">
+              <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+            </button>
           </div>
         </div>
         {% endfor %}
-      </div>
+        <button type="submit" class="w-full btn-primary font-bold py-2">Salvar ordem</button>
+      </form>
       {% else %}
       <div class="text-center py-6">
         <p class="text-gray-500">Nenhuma classificação criada</p>

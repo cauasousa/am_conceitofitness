@@ -75,17 +75,82 @@
                     <input id="checkout-phone" type="tel" placeholder="(99) 98765-4321" class="w-full border rounded px-3 py-2 focus-ring" required>
                 </div>
 
-                <!-- CEP -->
+                <!-- Opções de Entrega -->
                 <div class="pt-4 border-t shipping-options-container">
+                    <h3 class="font-bold text-lg text-primary-pink mb-4">Opção de Entrega</h3>
+                    
+                    <div class="space-y-3">
+                        <div class="group relative">
+                            <label for="checkout_option_pickup" class="js-shipping-radio list-item block p-5 rounded-lg border-2 cursor-pointer transition-all duration-200 bg-gray-50 border-gray-300 hover:border-primary-pink/50">
+                                <div class="flex items-start gap-4 w-full">
+                                    <input id="checkout_option_pickup" class="shipping-method js-shipping-radio-input" data-price="0.00" data-code="pickup" type="radio" value="pickup" name="shipping_option" required>
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <h3 class="font-bold text-gray-900 text-base">📍 Retirar Pessoalmente</h3>
+                                            <span class="text-2xl font-extrabold text-green-600">GRÁTIS</span>
+                                        </div>
+                                        <p class="text-sm text-gray-700 mb-1">Imediato</p>
+                                        <p class="text-xs text-gray-600">Compre online e retire em um ponto nosso</p>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="group relative">
+                            <label for="checkout_option_delivery" class="js-shipping-radio list-item block p-5 rounded-lg border-2 cursor-pointer transition-all duration-200 bg-white border-gray-300 hover:border-primary-pink/50">
+                                <div class="flex items-start gap-4 w-full">
+                                    <input id="checkout_option_delivery" class="shipping-method js-shipping-radio-input" data-price="0.00" data-code="delivery" type="radio" value="delivery" name="shipping_option" required>
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <h3 class="font-bold text-gray-900 text-base">📦 Entrega para meu Endereço</h3>
+                                            <span id="delivery-price-display" class="text-2xl font-extrabold text-primary-pink">-</span>
+                                        </div>
+                                        <p class="text-sm text-gray-700 mb-1">Calculado pelo CEP</p>
+                                        <p class="text-xs text-gray-600">Informe seu CEP para calcular o frete</p>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CEP (aparece apenas se selecionar entrega) -->
+                <div id="cep-section" class="hidden pt-4 border-t">
                     <h3 class="font-bold text-lg text-primary-pink mb-4">Endereço de Entrega</h3>
                     
                     <div class="space-y-3">
                         <div class="font-bold text-base text-gray-700">CEP *</div>
                         <div class="flex flex-col sm:flex-row gap-3 items-center">
-                            <input id="checkout-cep" type="text" placeholder="Digite o CEP (apenas números)" maxlength="8" inputmode="numeric" class="border rounded px-3 py-2 w-full sm:w-48 focus-ring" required>
+                            <input id="checkout-cep" type="text" placeholder="Digite o CEP (apenas números)" maxlength="8" inputmode="numeric" class="border rounded px-3 py-2 w-full sm:w-48 focus-ring">
                             <button type="button" id="checkout-calc-shipping" class="btn-primary px-4 py-2 rounded w-full sm:w-auto font-medium">Buscar Endereço</button>
                         </div>
+                        
+                        <!-- Mensagem de erro do CEP -->
+                        <div id="checkout-cep-error-message" class="hidden p-3 bg-red-50 rounded-lg border border-red-200 flex items-start gap-2">
+                            <svg class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                            <div>
+                                <div class="font-medium text-red-700">CEP não encontrado ou inválido.</div>
+                                <div class="text-sm text-red-600">Por favor, verifique o CEP e tente novamente. Digite apenas números: <strong>65889560</strong></div>
+                            </div>
+                        </div>
+                        
                         <a href="http://www.buscacep.correios.com.br/sistemas/buscacep/" target="_blank" class="text-primary-pink hover:underline text-sm">Não sei meu CEP</a>
+                    </div>
+
+                    <!-- Loading Container -->
+                    <div id="checkout-shipping-loading" class="hidden mt-4 p-4 bg-blue-50 rounded-lg border-2 border-blue-200 flex items-center gap-3">
+                        <div class="animate-spin">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="font-medium text-blue-900">Calculando frete...</p>
+                            <p class="text-xs text-blue-700">Aguarde alguns segundos</p>
+                        </div>
                     </div>
 
                     <!-- Endereço Preenchido -->
@@ -117,43 +182,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Opções de Frete -->
-                <div id="shipping-options-response" class="hidden pt-4 border-t shipping-options-container space-y-3">
-                    <h4 class="font-bold text-gray-800 text-sm uppercase tracking-wide">Escolha uma opção de entrega:</h4>
-                    
-                    <div class="group relative">
-                        <label for="checkout_option_pickup" class="js-shipping-radio list-item block p-5 rounded-lg border-2 cursor-pointer transition-all duration-200 bg-gray-50 border-gray-300 hover:border-primary-pink/50">
-                            <div class="flex items-start gap-4 w-full">
-                                <input id="checkout_option_pickup" class="shipping-method js-shipping-radio-input" data-price="0.00" data-code="pickup" type="radio" value="pickup" name="shipping_option" required>
-                                <div class="flex-1">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <h3 class="font-bold text-gray-900 text-base">📍 Retirar Pessoalmente</h3>
-                                        <span class="text-2xl font-extrabold text-green-600">GRÁTIS</span>
-                                    </div>
-                                    <p class="text-sm text-gray-700 mb-1">Imediato</p>
-                                    <p class="text-xs text-gray-600">Compre online e retire em um ponto nosso</p>
-                                </div>
-                            </div>
-                        </label>
-                    </div>
-
-                    <!-- Loading Container -->
-                    <div id="checkout-shipping-loading" class="hidden p-4 bg-blue-50 rounded-lg border-2 border-blue-200 flex items-center gap-3">
-                        <div class="animate-spin">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="font-medium text-blue-900">Calculando opções de entrega...</p>
-                            <p class="text-xs text-blue-700">Aguarde alguns segundos</p>
-                        </div>
-                    </div>
-
-                    <div id="checkout-delivery-options-container" class="space-y-3 list-none"></div>
                 </div>
                 
                 <button type="submit" id="checkout-submit-btn" class="w-full bg-gray-400 text-white py-3 rounded text-lg font-bold uppercase transition duration-200 mt-6 cursor-not-allowed" disabled>
@@ -191,6 +219,104 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('Script de checkout carregado');
+    
+    const formatBRL = (v) => 'R$ ' + Number(v).toFixed(2).replace('.', ',');
+    
+    // Função para carrinho
+    function getCart() {
+        try { return JSON.parse(localStorage.getItem('cart_v1') || '[]'); } catch(e){ return []; }
+    }
+    
+    // Elementos principais
+    const cepSection = document.getElementById('cep-section');
+    const pickupRadio = document.getElementById('checkout_option_pickup');
+    const deliveryRadio = document.getElementById('checkout_option_delivery');
+    const cepInput = document.getElementById('checkout-cep');
+    const calcBtn = document.getElementById('checkout-calc-shipping');
+    const addressDetails = document.getElementById('checkout-address-details');
+    const deliveryPriceDisplay = document.getElementById('delivery-price-display');
+    const cepErrorMessage = document.getElementById('checkout-cep-error-message');
+    const shippingLoading = document.getElementById('checkout-shipping-loading');
+    
+    console.log('Elementos encontrados:', {
+        cepSection: !!cepSection,
+        pickupRadio: !!pickupRadio,
+        deliveryRadio: !!deliveryRadio,
+        cepInput: !!cepInput
+    });
+    
+    // Função para atualizar estilos de seleção (definida ANTES de ser usada)
+    const updateCheckoutShippingStyles = () => {
+        document.querySelectorAll('.js-shipping-radio').forEach(label => {
+            label.classList.remove('ring-2', 'ring-green-500', 'ring-primary-pink', 'bg-green-100', 'bg-primary-pink/10', 'border-green-500', 'border-primary-pink', 'shadow-md');
+            
+            if (label.querySelector('input[value="pickup"]')) {
+                label.classList.add('bg-gray-50', 'border-gray-300');
+            } else {
+                label.classList.add('bg-white', 'border-gray-300');
+            }
+        });
+
+        const selectedRadio = document.querySelector('input[name="shipping_option"]:checked');
+        if (selectedRadio) {
+            const label = selectedRadio.closest('.js-shipping-radio');
+            if (label) {
+                const isPickup = selectedRadio.value === 'pickup';
+                const ringColor = isPickup ? 'ring-green-500' : 'ring-primary-pink';
+                const bgColor = isPickup ? 'bg-green-100' : 'bg-primary-pink/10';
+                const borderColor = isPickup ? 'border-green-500' : 'border-primary-pink';
+
+                label.classList.remove('bg-gray-50', 'bg-white', 'border-gray-300');
+                label.classList.add('ring-2', ringColor, bgColor, borderColor, 'shadow-md');
+            }
+        }
+    };
+    
+    // Listener para mudança de opção de entrega
+    const handleShippingOptionChange = () => {
+        const selectedOption = document.querySelector('input[name="shipping_option"]:checked');
+        
+        console.log('Opção selecionada:', selectedOption ? selectedOption.value : 'nenhuma');
+        console.log('Elemento cepSection existe?', !!cepSection);
+        
+        if (selectedOption && selectedOption.value === 'delivery') {
+            // Mostra seção de CEP
+            console.log('Mostrando seção de CEP');
+            if (cepSection) {
+                cepSection.classList.remove('hidden');
+                console.log('Classes da cepSection:', cepSection.className);
+            }
+            if (cepInput) cepInput.required = true;
+        } else {
+            // Esconde seção de CEP se escolher retirada
+            console.log('Escondendo seção de CEP');
+            if (cepSection) {
+                cepSection.classList.add('hidden');
+            }
+            if (cepInput) cepInput.required = false;
+            if (addressDetails) addressDetails.classList.add('hidden');
+            
+            // Atualiza resumo para frete grátis
+            const cart = getCart();
+            const subtotal = cart.reduce((s, i) => s + (i.price || 0) * i.qty, 0);
+            document.getElementById('checkout-summary-shipping').textContent = formatBRL(0);
+            document.getElementById('checkout-summary-total').textContent = formatBRL(subtotal);
+        }
+        
+        updateCheckoutShippingStyles();
+    };
+    
+    if (pickupRadio) {
+        pickupRadio.addEventListener('change', handleShippingOptionChange);
+        pickupRadio.checked = true; // Seleciona retirada como padrão
+        handleShippingOptionChange();
+    }
+    
+    if (deliveryRadio) {
+        deliveryRadio.addEventListener('change', handleShippingOptionChange);
+    }
+    
     // Função para validar carrinho
     const validateCart = () => {
         try {
@@ -219,9 +345,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const urlParams = new URLSearchParams(window.location.search);
     const cepFromUrl = urlParams.get('cep');
-    const cepInput = document.getElementById('checkout-cep');
-    const calcBtn = document.getElementById('checkout-calc-shipping');
-    const addressDetails = document.getElementById('checkout-address-details');
     const logradouroInput = document.getElementById('checkout-logradouro');
     const bairroInput = document.getElementById('checkout-bairro');
     const cidadeInput = document.getElementById('checkout-cidade');
@@ -242,8 +365,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchAddress = async () => {
         const cep = cepInput.value.trim().replace(/\D/g, '');
         
+        // Esconde erro anterior
+        if (cepErrorMessage) cepErrorMessage.classList.add('hidden');
+        
         if (cep.length !== 8) {
-            alert('CEP deve ter 8 dígitos');
+            if (cepErrorMessage) {
+                cepErrorMessage.classList.remove('hidden');
+            }
             return;
         }
         
@@ -255,7 +383,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             
             if (data.erro) {
-                alert('CEP não encontrado');
+                if (cepErrorMessage) {
+                    cepErrorMessage.classList.remove('hidden');
+                }
                 calcBtn.disabled = false;
                 calcBtn.textContent = 'Buscar Endereço';
                 return;
@@ -291,121 +421,14 @@ document.addEventListener('DOMContentLoaded', () => {
             searchAddress();
         });
     }
-    
-    // Permite buscar ao pressionar Enter no CEP
-    if (cepInput) {
-        cepInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                searchAddress();
-            }
-        });
-    }
 
-    // Mostra opções de entrega após endereço preenchido
-    const addressDetailsDiv = document.getElementById('checkout-address-details');
-    const shippingOptionsDiv = document.getElementById('shipping-options-response');
-    
-    if (addressDetailsDiv && shippingOptionsDiv) {
-        const observer = new MutationObserver(() => {
-            if (!addressDetailsDiv.classList.contains('hidden')) {
-                shippingOptionsDiv.classList.remove('hidden');
-                // Seleciona retirada como padrão
-                const pickupRadio = document.getElementById('checkout_option_pickup');
-                if (pickupRadio && !pickupRadio.checked) {
-                    pickupRadio.checked = true;
-                }
-                updateCheckoutShippingStyles();
-            }
-        });
-        observer.observe(addressDetailsDiv, { attributes: true, attributeFilter: ['class'] });
-    }
-
-    // Função para atualizar estilos de seleção
-    const updateCheckoutShippingStyles = () => {
-        document.querySelectorAll('.js-shipping-radio').forEach(label => {
-            label.classList.remove('ring-2', 'ring-green-500', 'ring-primary-pink', 'bg-green-100', 'bg-primary-pink/10', 'border-green-500', 'border-primary-pink', 'shadow-md');
-            
-            if (label.querySelector('input[value="pickup"]')) {
-                label.classList.add('bg-gray-50', 'border-gray-300');
-            } else {
-                label.classList.add('bg-white', 'border-gray-300');
-            }
-        });
-
-        const selectedRadio = document.querySelector('input[name="shipping_option"]:checked');
-        if (selectedRadio) {
-            const label = selectedRadio.closest('.js-shipping-radio');
-            if (label) {
-                const isPickup = selectedRadio.value === 'pickup';
-                const ringColor = isPickup ? 'ring-green-500' : 'ring-primary-pink';
-                const bgColor = isPickup ? 'bg-green-100' : 'bg-primary-pink/10';
-                const borderColor = isPickup ? 'border-green-500' : 'border-primary-pink';
-
-                label.classList.remove('bg-gray-50', 'bg-white', 'border-gray-300');
-                label.classList.add('ring-2', ringColor, bgColor, borderColor, 'shadow-md');
-            }
-        }
-    };
-
-    // Listener para mudança de opção de entrega
-    const shippingRadios = document.querySelectorAll('input[name="shipping_option"]');
-    shippingRadios.forEach(radio => {
-        radio.addEventListener('change', () => {
-            updateCheckoutShippingStyles();
-            
-            // Atualiza o resumo com o frete selecionado
-            const selectedRadio = document.querySelector('input[name="shipping_option"]:checked');
-            if (selectedRadio) {
-                const shippingCost = parseFloat(selectedRadio.dataset.price) || 0;
-                const cart = getCart();
-                const subtotal = cart.reduce((s, i) => s + (i.price || 0) * i.qty, 0);
-                const total = subtotal + shippingCost;
-                
-                const summaryShipping = document.getElementById('checkout-summary-shipping');
-                const summaryTotal = document.getElementById('checkout-summary-total');
-                
-                if (summaryShipping) summaryShipping.textContent = formatBRL(shippingCost);
-                if (summaryTotal) summaryTotal.textContent = formatBRL(total);
-            }
-        });
-    });
-
-    // Função para adicionar listener a novos radios (usado quando criar opção de entrega dinamicamente)
-    const attachRadioListener = (radio) => {
-        radio.addEventListener('change', () => {
-            updateCheckoutShippingStyles();
-            
-            // Atualiza o resumo com o frete selecionado
-            const selectedRadio = document.querySelector('input[name="shipping_option"]:checked');
-            if (selectedRadio) {
-                const shippingCost = parseFloat(selectedRadio.dataset.price) || 0;
-                const cart = getCart();
-                const subtotal = cart.reduce((s, i) => s + (i.price || 0) * i.qty, 0);
-                const total = subtotal + shippingCost;
-                
-                const summaryShipping = document.getElementById('checkout-summary-shipping');
-                const summaryTotal = document.getElementById('checkout-summary-total');
-                
-                if (summaryShipping) summaryShipping.textContent = formatBRL(shippingCost);
-                if (summaryTotal) summaryTotal.textContent = formatBRL(total);
-            }
-        });
-    };
-
-    // **NOVO: Calcular frete automaticamente após endereço preenchido**
+    // **Calcular frete automaticamente após endereço preenchido**
     const calculateCheckoutShipping = async () => {
         const cep = cepInput.value.trim().replace(/\D/g, '');
         if (cep.length !== 8) return;
 
-        const deliveryContainer = document.getElementById('checkout-delivery-options-container');
-        const shippingResponse = document.getElementById('shipping-options-response');
-        const loadingDiv = document.getElementById('checkout-shipping-loading');
-
-        // Mostra loading e esconde opções
-        shippingResponse.classList.remove('hidden');
-        loadingDiv.classList.remove('hidden');
-        deliveryContainer.innerHTML = '';
+        // Mostra loading
+        if (shippingLoading) shippingLoading.classList.remove('hidden');
 
         try {
             const response = await fetch('/api/calculate-shipping', {
@@ -418,65 +441,49 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (data.success) {
                 const shippingCost = (data.shipping_cost || 0);
-                const deliveryHTML = `
-                    <div class="js-shipping-list-item radio-button-item w-full">
-                        <label for="checkout_option_delivery" class="js-shipping-radio list-item block p-5 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:border-primary-pink/50 bg-white border-gray-300">
-                            <div class="flex items-start gap-4 w-full">
-                                <input id="checkout_option_delivery" class="shipping-method js-shipping-radio-input" 
-                                       data-price="${shippingCost}" data-code="delivery" data-name="Entrega para seu Endereço" 
-                                       type="radio" value="delivery" name="shipping_option" required>
-                                <div class="flex-1">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <h3 class="font-bold text-gray-900 text-base">📦 Entrega para seu Endereço</h3>
-                                        <span class="text-2xl font-extrabold text-primary-pink">${formatBRL(shippingCost)}</span>
-                                    </div>
-                                    <div class="text-xs text-gray-500">Distância: ${(data.distance_km || 0).toFixed(1)} km</div>
-                                    <div class="text-xs text-gray-500">${data.message || 'Frete calculado com sucesso'}</div>
-                                </div>
-                            </div>
-                        </label>
-                    </div>`;
                 
-                // Esconde loading e mostra opção de entrega
-                loadingDiv.classList.add('hidden');
-                deliveryContainer.innerHTML = deliveryHTML;
-                
-                // Seleciona entrega como padrão
-                const deliveryRadio = document.getElementById('checkout_option_delivery');
+                // Atualiza o preço no radio button de entrega
                 if (deliveryRadio) {
-                    // Adiciona listener ao novo radio
-                    attachRadioListener(deliveryRadio);
-                    
-                    deliveryRadio.checked = true;
-                    deliveryRadio.dispatchEvent(new Event('change', { bubbles: true }));
+                    deliveryRadio.dataset.price = shippingCost;
                 }
+                if (deliveryPriceDisplay) {
+                    deliveryPriceDisplay.textContent = formatBRL(shippingCost);
+                }
+                
+                // Atualiza resumo com o frete calculado
+                const cart = getCart();
+                const subtotal = cart.reduce((s, i) => s + (i.price || 0) * i.qty, 0);
+                const total = subtotal + shippingCost;
+                
+                document.getElementById('checkout-summary-shipping').textContent = formatBRL(shippingCost);
+                document.getElementById('checkout-summary-total').textContent = formatBRL(total);
+                
+                // Esconde loading
+                if (shippingLoading) shippingLoading.classList.add('hidden');
                 
                 updateCheckoutShippingStyles();
             } else {
-                loadingDiv.classList.add('hidden');
-                deliveryContainer.innerHTML = `<div class="p-4 bg-red-50 border border-red-300 rounded-lg text-red-700 text-sm">${data.message || 'Erro ao calcular frete'}</div>`;
+                if (shippingLoading) shippingLoading.classList.add('hidden');
+                
+                if (cepErrorMessage) {
+                    cepErrorMessage.classList.remove('hidden');
+                }
+                
+                if (deliveryPriceDisplay) {
+                    deliveryPriceDisplay.textContent = 'Erro';
+                }
             }
         } catch (error) {
             console.error('Erro ao calcular frete:', error);
-            loadingDiv.classList.add('hidden');
-            deliveryContainer.innerHTML = `<div class="p-4 bg-red-50 border border-red-300 rounded-lg text-red-700 text-sm">Erro ao conectar com o servidor</div>`;
+            if (shippingLoading) shippingLoading.classList.add('hidden');
+            
+            if (deliveryPriceDisplay) {
+                deliveryPriceDisplay.textContent = 'Erro';
+            }
         }
     };
-
-    // Observa quando endereço é preenchido e calcula frete automaticamente
-    if (addressDetailsDiv) {
-        const observer = new MutationObserver(() => {
-            if (!addressDetailsDiv.classList.contains('hidden')) {
-                setTimeout(() => {
-                    calculateCheckoutShipping();
-                }, 300);
-            }
-        });
-        observer.observe(addressDetailsDiv, { attributes: true, attributeFilter: ['class'] });
-    }
     
     // Renderizar resumo do carrinho
-    const formatBRL = (v) => 'R$ ' + Number(v).toFixed(2).replace('.', ',');
     function getCart() {
         try { return JSON.parse(localStorage.getItem('cart_v1') || '[]'); } catch(e){ return []; }
     }

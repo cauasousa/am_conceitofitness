@@ -65,71 +65,7 @@ Voltar para o Catálogo
             <div class="text-gray-500 italic text-center">Carregando itens...</div>
         </div>
 
-        <div class="p-6 bg-white shadow-lg rounded-lg border border-gray-100 space-y-4">
-            
-            <div class="js-shipping-calculator-head space-y-3">
-                
-                <div id="cep-input-area" class="space-y-3">
-                    <div class="font-bold text-lg text-primary-pink">🚚 Calcular Frete e Entrega</div>
-                    <div class="flex flex-col sm:flex-row gap-3 items-center">
-                        <input id="cep-input" type="text" placeholder="Digite o CEP (apenas números)" maxlength="8" inputmode="numeric" class="border-2 border-gray-300 rounded px-4 py-2 w-full sm:w-48 focus:ring-2 focus:ring-primary-pink focus:border-primary-pink transition">
-                        
-                        <button id="calc-shipping" type="button" class="btn-primary px-6 py-2 rounded w-full sm:w-auto font-medium whitespace-nowrap transition">Calcular</button>
-                    </div>
-                    
-                    <!-- Mensagem de erro do CEP -->
-                    <div id="cep-error-message" class="hidden p-3 bg-red-50 rounded-lg border border-red-200 flex items-start gap-2">
-                        <svg class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                        </svg>
-                        <div>
-                            <div class="font-medium text-red-700">Não conseguimos encontrar esse CEP.</div>
-                            <div class="text-sm text-red-600">Digite assim: <strong>65889560</strong></div>
-                        </div>
-                    </div>
-                    
-                    <a href="http://www.buscacep.correios.com.br/sistemas/buscacep/" target="_blank" class="text-primary-pink hover:underline text-sm">Não sei meu CEP</a>
-                </div>
-                
-                <div id="cep-calculated-summary" class="hidden p-4 bg-primary-pink/10 rounded-lg border border-primary-pink/30">
-                    <div class="flex items-center justify-between">
-                        <span class="font-medium">
-                            <span class="text-gray-600">CEP Calculado:</span>
-                            <strong class="text-primary-pink ml-2" id="current-cep-display"></strong>
-                        </span>
-                        <a href="#" class="js-shipping-calculator-change-zipcode text-sm text-primary-pink hover:underline font-medium">Alterar CEP</a>
-                    </div>
-                </div>
-
-            </div>
-            
-            <div id="shipping-options-response" class="hidden space-y-3 border-t pt-4 list-none"> 
-                <h4 class="font-bold text-gray-800 text-sm uppercase tracking-wide">Escolha uma opção de entrega:</h4>
-                
-                <div class="group relative list-none">
-                    <label for="option_pickup" class="js-shipping-radio list-item block p-5 rounded-lg border-2 cursor-pointer transition-all duration-200 bg-gray-50 border-gray-300 hover:border-primary-pink/50">
-                        <div class="flex items-start gap-4 w-full">
-                            <input id="option_pickup" class="shipping-method js-shipping-radio-input" data-price="0.00" data-code="pickup" data-name="Retirar Pessoalmente (Grátis)" type="radio" value="pickup" name="shipping_option" required>
-                            <div class="flex-1">
-                                <div class="flex items-center justify-between mb-2">
-                                    <h3 class="font-bold text-gray-900 text-base">📍 Retirar Pessoalmente</h3>
-                                    <span class="text-2xl font-extrabold text-green-600">GRÁTIS</span>
-                                </div>
-                                <p class="text-sm text-gray-700 mb-1">Imediato</p>
-                                <p class="text-xs text-gray-600">Compre online e retire em um ponto nosso</p>
-                            </div>
-                        </div>
-                    </label>
-                </div>
-
-                <div id="delivery-options-container" class="space-y-3 list-none">
-                    </div>
-                
-                <div id="shipping-error" class="hidden p-4 bg-red-50 border border-red-300 rounded-lg text-red-700 text-sm font-medium"></div>
-
-            </div>
-            
-        </div>
+        
 
         
     </div>
@@ -140,18 +76,12 @@ Voltar para o Catálogo
         <div id="summary-list" class="divide-y divide-gray-200 space-y-2 pb-4">
         </div>
 
-        <div class="mt-2 flex items-center justify-between">
-            <div class="text-base text-gray-700">Subtotal</div>
-            <div id="summary-subtotal" class="font-semibold">R$ 0,00</div>
-        </div>
         
-        <div class="mt-1 flex items-center justify-between border-b pb-4">
-            <div class="text-base text-gray-700">Frete</div>
-            <div id="summary-shipping-cost" class="font-semibold text-green-600">R$ 0,00</div>
-        </div>
+        
+        
 
         <div class="mt-4 flex items-center justify-between">
-            <div class="text-xl font-extrabold text-gray-900">Total a Pagar</div>
+            <div class="text-xl font-extrabold text-gray-900">Subtotal</div>
             <div id="summary-total" class="text-3xl font-extrabold text-primary-pink">R$ 0,00</div>
         </div>
 

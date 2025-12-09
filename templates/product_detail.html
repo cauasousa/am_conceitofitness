@@ -141,67 +141,6 @@ Voltar para a Loja
   </div>
  </div>
  </div>
-  
-  <div class="space-y-4 pt-4 border-t shipping-options-container">
-    <h3 class="font-bold text-lg text-primary-pink">Opções de Envio e Retirada</h3>
-    
-    <div id="cep-input-area" class="space-y-3">
-      <div class="font-bold text-base text-gray-700">Calcular Frete</div>
-      <div class="flex flex-col sm:flex-row gap-3 items-center">
-        <input id="detail-cep-input" type="text" placeholder="Digite o CEP (apenas números)" maxlength="8" inputmode="numeric" class="border rounded px-3 py-2 w-full sm:w-48 focus:ring-primary-pink focus:border-primary-pink">
-        <button id="detail-calc-shipping" type="button" class="btn-primary px-4 py-2 rounded w-full sm:w-auto font-medium">Calcular</button>
-      </div>
-      
-      <!-- Mensagem de erro do CEP -->
-      <div id="detail-cep-error-message" class="hidden p-3 bg-red-50 rounded-lg border border-red-200 flex items-start gap-2">
-          <svg class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-          </svg>
-          <div>
-              <div class="font-medium text-red-700">Não conseguimos encontrar esse CEP.</div>
-              <div class="text-sm text-red-600">Digite assim: <strong>65889560</strong></div>
-          </div>
-      </div>
-      
-      <a href="http://www.buscacep.correios.com.br/sistemas/buscacep/" target="_blank" class="text-primary-pink hover:underline text-sm">Não sei meu CEP</a>
-    </div>
-
-    <div id="cep-calculated-summary" class="hidden p-3 bg-primary-pink/10 rounded-lg border border-primary-pink/30">
-      <div class="flex items-center justify-between">
-        <span class="font-medium">
-          <span class="text-gray-600">Entregas para:</span>
-          <strong class="text-primary-pink ml-1" id="detail-current-cep-display"></strong>
-        </span>
-        <a href="#" id="detail-change-cep-btn" class="text-sm text-primary-pink hover:underline font-medium">Alterar CEP</a>
-      </div>
-    </div>
-
-    <div id="shipping-options-response" class="hidden space-y-3 list-none">
-      <h4 class="font-bold text-gray-800 text-sm uppercase tracking-wide">Escolha uma opção:</h4>
-      
-      <div class="group relative">
-        <label for="detail_option_pickup" class="js-shipping-radio list-item block p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 bg-gray-50 border-gray-300 hover:border-primary-pink/50">
-          <div class="flex items-start gap-3 w-full">
-            <input id="detail_option_pickup" class="shipping-method js-shipping-radio-input" data-price="0.00" data-code="pickup" type="radio" value="pickup" name="shipping_option_detail" required>
-            <div class="flex-1">
-              <div class="flex items-center justify-between">
-                <h3 class="font-bold text-gray-900 text-base">📍 Retirar Pessoalmente</h3>
-                <span class="text-xl font-extrabold text-green-600">GRÁTIS</span>
-              </div>
-              <p class="text-xs text-gray-600 mt-1">Compre online e retire em um ponto parceiro.</p>
-            </div>
-          </div>
-        </label>
-      </div>
-
-      <div id="detail-delivery-options-container" class="space-y-3 list-none">
-        </div>
-
-      <div id="detail-shipping-error" class="hidden p-3 bg-red-50 border border-red-300 rounded-lg text-red-700 text-sm font-medium"></div>
-
-    </div>
-  </div>
-   
  
  <button id="add-to-cart-btn"
   data-product-id="{{ product.id }}"
