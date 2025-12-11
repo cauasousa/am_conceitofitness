@@ -457,18 +457,48 @@ def admin_add_classification():
   flash("Classificação criada")
   return redirect(url_for("admin_dashboard"))
 
-def save_uploaded_images(files):
+def save_uploaded_images(files, product_name="produto", existing_count=0):
   """
   Faz upload de múltiplas imagens para o Supabase Storage.
+  Renomeia as imagens com base no nome do produto + timestamp único.
+  
+  Args:
+    files: Lista de arquivos de imagem
+    product_name: Nome do produto (usado para renomear)
+    existing_count: Número de imagens já existentes (não usado, mantido por compatibilidade)
+  
   Retorna lista de URLs públicas das imagens.
   """
+  import re
+  import uuid
+  from pathlib import Path
+  from datetime import datetime
+  
   saved_urls = []
-  for f in files:
+  
+  # Normaliza o nome do produto (remove caracteres especiais, espaços -> underscores)
+  normalized_name = re.sub(r'[^\w\s-]', '', product_name.lower())
+  normalized_name = re.sub(r'[-\s]+', '_', normalized_name)
+  normalized_name = normalized_name[:30]  # Limita tamanho
+  
+  # Gera timestamp único para este batch de uploads
+  timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+  
+  for idx, f in enumerate(files, start=1):
     if not f or not f.filename:
       continue
     
-    # Upload para Supabase Storage
-    public_url = upload_file_to_supabase(f, folder_path="products")
+    # Pega extensão original
+    original_ext = Path(f.filename).suffix.lower()
+    if not original_ext:
+      original_ext = '.jpg'
+    
+    # Gera novo nome com timestamp: produto_20251211_143022_01.jpg
+    # Isso garante unicidade mesmo após exclusões
+    new_filename = f"{normalized_name}_{timestamp}_{idx:02d}{original_ext}"
+    
+    # Upload para Supabase Storage com nome customizado
+    public_url = upload_file_to_supabase(f, folder_path="products", custom_filename=new_filename)
     
     if public_url:
       saved_urls.append(public_url)
@@ -504,7 +534,8 @@ def admin_add():
     db.add(p)
     db.commit()
     # salvar imagens no Supabase e criar ProductImage com URLs
-    saved_urls = save_uploaded_images(uploaded)
+    # Passa o nome do produto para renomeação inteligente
+    saved_urls = save_uploaded_images(uploaded, product_name=name, existing_count=0)
     for url in saved_urls:
       db.add(ProductImage(product_id=p.id, image_url=url))
     db.commit()
@@ -535,7 +566,9 @@ def admin_edit(pid):
     p.classification_id = int(classification_id) if classification_id else None
     # imagens novas (não removemos as antigas aqui — apenas adicionamos)
     uploaded = request.files.getlist("images")
-    saved_urls = save_uploaded_images(uploaded)
+    # Conta quantas imagens já existem para incrementar corretamente
+    existing_images_count = len(p.images)
+    saved_urls = save_uploaded_images(uploaded, product_name=p.name, existing_count=existing_images_count)
     for url in saved_urls:
       db.add(ProductImage(product_id=p.id, image_url=url))
     db.commit()

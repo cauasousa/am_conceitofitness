@@ -24,13 +24,14 @@ try:
 except Exception as e:
     print(f"[ERROR] Falha ao criar cliente Supabase: {e}")
 
-def upload_file_to_supabase(file_object, folder_path="products"):
+def upload_file_to_supabase(file_object, folder_path="products", custom_filename=None):
     """
     Faz o upload de um objeto de arquivo (do formulário) para o Supabase Storage.
     
     Args:
         file_object: O objeto de arquivo recebido do formulário Flask (request.files).
         folder_path: A pasta dentro do bucket (ex: 'products').
+        custom_filename: Nome customizado para o arquivo (opcional). Se não fornecido, usa UUID.
         
     Returns:
         A URL pública do arquivo ou None em caso de falha.
@@ -39,8 +40,11 @@ def upload_file_to_supabase(file_object, folder_path="products"):
         return None
 
     # 1. Gera um nome de arquivo único para evitar colisões
-    file_extension = file_object.filename.split('.')[-1] if '.' in file_object.filename else 'jpg'
-    unique_filename = f"{uuid.uuid4()}.{file_extension}"
+    if custom_filename:
+        unique_filename = custom_filename
+    else:
+        file_extension = file_object.filename.split('.')[-1] if '.' in file_object.filename else 'jpg'
+        unique_filename = f"{uuid.uuid4()}.{file_extension}"
     
     # Caminho completo no storage: products/nome_unico.jpg
     path_on_storage = f"{folder_path}/{unique_filename}"
