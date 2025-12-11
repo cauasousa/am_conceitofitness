@@ -9,6 +9,7 @@ from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey, Boolean
 import math
 import requests
 from datetime import datetime
+from supabase_service import upload_file_to_supabase, delete_file_from_supabase
 
 # Carrega variáveis de ambiente
 load_dotenv()
@@ -54,7 +55,6 @@ class ProductStock(Base):
   id = Column(Integer, primary_key=True)
   product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
   size = Column(String(50), nullable=False)
-  color = Column(String(50), nullable=False)
   quantity = Column(Integer, default=0)
   # preço específico para essa variação (opcional)
   price = Column(Float, nullable=True)
@@ -112,10 +112,10 @@ ensure_classification_order_column()
 app = Flask(__name__)
 app.secret_key = SECRET
 
-# UPLOAD CONFIG
-UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "static", "images")
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+# UPLOAD CONFIG (Desativado - agora usa Supabase Storage)
+# UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "static", "images")
+# os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+# app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # host/port configuráveis (use .env: FLASK_HOST, FLASK_PORT, FLASK_DEBUG)
 HOST = os.environ.get("FLASK_HOST", "0.0.0.0")
@@ -380,14 +380,13 @@ def product_detail(product_id):
     # Converte variações para estrutura simples para o JS/Template
     variant_objs = product.stock_variants
     variants = [
-      {"id": v.id, "size": v.size, "color": v.color, "quantity": int(v.quantity or 0), "is_available": bool(v.is_available), "price": v.price}
+      {"id": v.id, "size": v.size, "quantity": int(v.quantity or 0), "is_available": bool(v.is_available), "price": v.price}
       for v in variant_objs
     ]
-    # Filtra apenas tamanhos e cores únicos que TÊM ALGUM ESTOQUE
+    # Filtra apenas tamanhos únicos que TÊM ALGUM ESTOQUE
     available_variants = [v for v in variants if v["quantity"] > 0]
     
     sizes = sorted(list({v["size"] for v in available_variants}))
-    colors = sorted(list({v["color"] for v in available_variants}))
     
     # NOTE: Para o Jinja, agora você só verá tamanhos/cores que TÊM ESTOQUE inicial.
 
@@ -400,8 +399,7 @@ def product_detail(product_id):
       preco_original=preco_original,
       preco_promocional=preco_promocional,
       variants=variants, # Envia TODAS as variantes para o JS
-      sizes=sizes,
-      colors=colors
+      sizes=sizes
     )
 # =========================================================================
 # ROTAS ADMIN (adições)
@@ -460,22 +458,24 @@ def admin_add_classification():
   return redirect(url_for("admin_dashboard"))
 
 def save_uploaded_images(files):
-  saved = []
+  """
+  Faz upload de múltiplas imagens para o Supabase Storage.
+  Retorna lista de URLs públicas das imagens.
+  """
+  saved_urls = []
   for f in files:
-    if not f:
+    if not f or not f.filename:
       continue
-    filename = secure_filename(f.filename)
-    if filename == "":
-      continue
-    target = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    # evita sobrescrever: se existir, prefixa timestamp
-    if os.path.exists(target):
-      base, ext = os.path.splitext(filename)
-      filename = f"{base}_{int(os.times()[4])}{ext}"
-      target = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    f.save(target)
-    saved.append(filename)
-  return saved
+    
+    # Upload para Supabase Storage
+    public_url = upload_file_to_supabase(f, folder_path="products")
+    
+    if public_url:
+      saved_urls.append(public_url)
+    else:
+      print(f"[warning] Falha ao fazer upload de {f.filename}")
+  
+  return saved_urls
 
 @app.route("/admin/add", methods=["POST"])
 @admin_required
@@ -503,10 +503,10 @@ def admin_add():
     )
     db.add(p)
     db.commit()
-    # salvar imagens e criar ProductImage
-    saved_files = save_uploaded_images(uploaded)
-    for fname in saved_files:
-      db.add(ProductImage(product_id=p.id, image_url=fname))
+    # salvar imagens no Supabase e criar ProductImage com URLs
+    saved_urls = save_uploaded_images(uploaded)
+    for url in saved_urls:
+      db.add(ProductImage(product_id=p.id, image_url=url))
     db.commit()
     flash(f"Produto '{name}' adicionado com sucesso. Adicione variações de estoque.")
     return redirect(url_for("admin_dashboard"))
@@ -535,9 +535,9 @@ def admin_edit(pid):
     p.classification_id = int(classification_id) if classification_id else None
     # imagens novas (não removemos as antigas aqui — apenas adicionamos)
     uploaded = request.files.getlist("images")
-    saved_files = save_uploaded_images(uploaded)
-    for fname in saved_files:
-      db.add(ProductImage(product_id=p.id, image_url=fname))
+    saved_urls = save_uploaded_images(uploaded)
+    for url in saved_urls:
+      db.add(ProductImage(product_id=p.id, image_url=url))
     db.commit()
   flash("Produto atualizado")
   return redirect(url_for("admin_dashboard"))
@@ -585,7 +585,6 @@ def admin_edit_stock(pid):
 @admin_required
 def admin_add_variant(pid):
   size = (request.form.get("size") or "").strip()
-  color = (request.form.get("color") or "").strip()
   try:
     quantity = int(request.form.get("quantity") or 0)
   except ValueError:
@@ -598,20 +597,19 @@ def admin_add_variant(pid):
   except ValueError:
     price_val = None
 
-  if not size or not color:
-    flash("Tamanho e Cor são obrigatórios para nova variação.")
+  if not size:
+    flash("Tamanho é obrigatório para nova variação.")
     return redirect(url_for("admin_dashboard"))
 
   with SessionLocal() as db:
-    exists = db.scalar(select(ProductStock).filter_by(product_id=pid, size=size, color=color))
+    exists = db.scalar(select(ProductStock).filter_by(product_id=pid, size=size))
     if exists:
-      flash("Variação (Tamanho/Cor) já existe!")
+      flash("Variação de tamanho já existe!")
       return redirect(url_for("admin_dashboard"))
 
     new_variant = ProductStock(
       product_id=pid,
       size=size,
-      color=color,
       quantity=quantity,
       is_available=(quantity > 0),
       price=price_val
@@ -624,10 +622,10 @@ def admin_add_variant(pid):
       product.total_stock = (product.total_stock or 0) + quantity
 
     db.commit()
-  flash(f"Variação {size}/{color} adicionada com sucesso.")
+  flash(f"Variação tamanho {size} adicionada com sucesso.")
   return redirect(url_for("admin_dashboard"))
 
-# Remover imagem específica (arquivo + registro DB)
+# Remover imagem específica (Supabase Storage + registro DB)
 @app.route("/admin/remove_image/<int:image_id>", methods=["POST"])
 @admin_required
 def admin_remove_image(image_id):
@@ -636,40 +634,37 @@ def admin_remove_image(image_id):
         if not img:
             flash("Imagem não encontrada")
             return redirect(url_for("admin_dashboard"))
-        # tenta remover arquivo físico (se existir)
-        try:
-            path = os.path.join(app.config["UPLOAD_FOLDER"], img.image_url)
-            if os.path.exists(path):
-                os.remove(path)
-        except Exception as e:
-            # não bloquear remoção no DB se falhar ao remover arquivo
-            print(f"[warn] não foi possível apagar arquivo de imagem: {e}")
-        # remove registro
+        
+        # Remove do Supabase Storage usando a URL pública
+        delete_success = delete_file_from_supabase(img.image_url)
+        
+        if not delete_success:
+            print(f"[warn] Falha ao deletar imagem do Supabase: {img.image_url}")
+        
+        # Remove registro do banco de dados
         db.delete(img)
         db.commit()
+    
     flash("Imagem removida com sucesso.")
     return redirect(url_for("admin_dashboard"))
 
 @app.route("/admin/delete/<int:pid>", methods=["POST"])
 @admin_required
 def admin_delete(pid):
-    """Deleta um produto completamente (imagens, variações e dados)"""
+    """Deleta um produto completamente (imagens do Supabase, variações e dados)"""
     with SessionLocal() as db:
         product = db.get(Product, pid)
         if not product:
             flash("Produto não encontrado")
             return redirect(url_for("admin_dashboard"))
         
-        # Remove imagens do disco
+        # Remove imagens do Supabase Storage
         for img in product.images:
-            try:
-                path = os.path.join(app.config["UPLOAD_FOLDER"], img.image_url)
-                if os.path.exists(path):
-                    os.remove(path)
-            except Exception as e:
-                print(f"[warn] Erro ao remover arquivo: {e}")
+            delete_success = delete_file_from_supabase(img.image_url)
+            if not delete_success:
+                print(f"[warn] Falha ao deletar imagem do Supabase: {img.image_url}")
         
-        # Remove produto (cascata remove imagens e variações)
+        # Remove produto (cascata remove imagens e variações do DB)
         db.delete(product)
         db.commit()
     

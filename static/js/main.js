@@ -53,7 +53,7 @@
                         total += (it.price || 0) * (it.qty || 0);
                         const div = document.createElement("div");
                         div.className = "flex items-center justify-between";
-                        div.innerHTML = `<div><div class="font-semibold">${it.name}</div><div class="text-sm text-gray-600">${it.size || ''} ${it.color || ''}</div></div><div class="text-sm">R$ ${((it.price || 0) * (it.qty || 0)).toFixed(2)} <button data-idx="${idx}" class="remove text-red-500 ml-2">x</button></div>`;
+                        div.innerHTML = `<div><div class="font-semibold">${it.name}</div><div class="text-sm text-gray-600">Tamanho: ${it.size || ''}</div></div><div class="text-sm">R$ ${((it.price || 0) * (it.qty || 0)).toFixed(2)} <button data-idx="${idx}" class="remove text-red-500 ml-2">x</button></div>`;
                         itemsEl.appendChild(div);
                     });
                     if (totalEl) totalEl.innerText = total.toFixed(2);
@@ -72,7 +72,7 @@
         function addItemToCart(item) {
             try {
                 const cart = loadCart();
-                const existing = cart.find(i => i.id === item.id && i.size === item.size && i.color === item.color);
+                const existing = cart.find(i => i.id === item.id && i.size === item.size);
                 if (existing) {
                     existing.qty += item.qty;
                 } else {

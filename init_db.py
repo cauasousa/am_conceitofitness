@@ -97,11 +97,10 @@ def init():
       ProductStock(size="M", color="Branco", quantity=0, is_available=False, price=129.90),
       ProductStock(size="G", color="Rosa", quantity=10, is_available=True, price=119.90),
     ])
-    p1.images.extend([
-      ProductImage(image_url="legging_conforto_main.jpeg"),
-      ProductImage(image_url="legging_conforto_main_2.png"),
-      ProductImage(image_url="legging_conforto_main_3.png"),
-    ])
+    # Imagens serão adicionadas via admin após fazer upload no Supabase
+    # p1.images.extend([
+    #   ProductImage(image_url="URL_DO_SUPABASE_AQUI"),
+    # ])
     
     # 2. PRODUTO 2: TOP AUTOCUIDADO
     p2 = Product(
@@ -118,9 +117,10 @@ def init():
       ProductStock(size="M", color="Bege", quantity=0, is_available=False, price=79.90),
       ProductStock(size="G", color="Preto", quantity=17, is_available=True, price=84.90),
     ])
-    p2.images.extend([
-      ProductImage(image_url="top_autocuidado_main.png"),
-    ])
+    # Imagens serão adicionadas via admin após fazer upload no Supabase
+    # p2.images.extend([
+    #   ProductImage(image_url="URL_DO_SUPABASE_AQUI"),
+    # ])
     
     # 3. PRODUTO 3: CAMISETA AMOR PRÓPRIO
     p3 = Product(
@@ -138,11 +138,10 @@ def init():
       ProductStock(size="G", color="Preto", quantity=15, is_available=True, price=64.90),
       ProductStock(size="GG", color="Preto", quantity=5, is_available=True, price=64.90),
     ])
-    p3.images.extend([
-      ProductImage(image_url="camiseta_amor_proprio_main.png"),
-      ProductImage(image_url="camiseta_amor_proprio_main_2.png"),
-      ProductImage(image_url="camiseta_amor_proprio_main_3.png"),
-    ])
+    # Imagens serão adicionadas via admin após fazer upload no Supabase
+    # p3.images.extend([
+    #   ProductImage(image_url="URL_DO_SUPABASE_AQUI"),
+    # ])
 
     # Adiciona todos os produtos e variações à sessão
     session.add_all([p1, p2, p3])

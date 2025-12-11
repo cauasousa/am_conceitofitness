@@ -190,7 +190,7 @@
                     <img src="${imgSrc}" alt="${(item.name || '')}" class="w-20 h-20 object-cover rounded border flex-shrink-0" onerror="this.src='/static/images/placeholder.jpg'">
                     <div class="flex-1 min-w-0">
                         <div class="font-bold text-gray-900">${item.name}</div>
-                        <div class="text-sm text-gray-600 mt-1">${item.size} / ${item.color}</div>
+                        <div class="text-sm text-gray-600 mt-1">Tamanho: ${item.size}</div>
                         <div class="text-sm font-semibold text-primary-pink mt-2">${formatBRL(item.price || 0)} × ${item.qty} = ${formatBRL(itemTotal)}</div>
                     </div>
                 </div>
@@ -211,7 +211,7 @@
             if (summaryList) {
                 const sdiv = document.createElement('div');
                 sdiv.className = 'py-2 flex items-center justify-between';
-                sdiv.innerHTML = `<div class="text-sm">${item.name} <span class="text-xs text-gray-500">(${item.size}/${item.color}) × ${item.qty}</span></div><div class="text-sm">${formatBRL(itemTotal)}</div>`;
+                sdiv.innerHTML = `<div class="text-sm">${item.name} <span class="text-xs text-gray-500">(${item.size}) × ${item.qty}</span></div><div class="text-sm">${formatBRL(itemTotal)}</div>`;
                 summaryList.appendChild(sdiv);
             }
         });

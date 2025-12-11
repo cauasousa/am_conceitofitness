@@ -5,3 +5,4 @@ python-dotenv>=0.21
 Werkzeug>=2.0
 gunicorn>=20.1.0
 pycep-correios>=5.2.0
+supabase>=2.25.1

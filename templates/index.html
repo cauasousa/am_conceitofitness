@@ -468,7 +468,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 {% for img_url in images_list %}
                   <div class="carousel-item flex-shrink-0 snap-start w-full">
                     <a href="{{ url_for('product_detail', product_id=p.id) }}" class="block group" aria-label="Ver detalhes de {{ p.name }}">
-                      <img src="{{ url_for('static', filename='images/' + img_url) }}" alt="{{ p.name }}" class="w-full h-56 object-cover rounded-md shadow-sm">
+                      <img src="{{ img_url if img_url.startswith('http') else url_for('static', filename='images/' + img_url) }}" alt="{{ p.name }}" class="w-full h-56 object-cover rounded-md shadow-sm">
                     </a>
                   </div>
                 {% endfor %}

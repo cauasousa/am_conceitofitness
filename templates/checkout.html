@@ -507,8 +507,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="text-xs text-gray-600">
                 <span class="inline-block">Tamanho: ${item.size}</span> 
                 <span class="mx-1">•</span>
-                <span class="inline-block">Cor: ${item.color}</span> 
-                <span class="mx-1">•</span>
                 <span class="inline-block">${item.qty}x ${formatBRL(item.price || 0)}</span>
             </div>
         `;
@@ -592,11 +590,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             message += `\n`;
 
-            message += `🛒 *PRODUTOS*\n`;
+            message += `🛌 *PRODUTOS*\n`;
             cart.forEach((item, index) => {
                 const itemTotal = (item.price || 0) * item.qty;
                 message += `${index + 1}. ${item.name}\n`;
-                message += `   Tamanho: ${item.size} | Cor: ${item.color}\n`;
+                message += `   Tamanho: ${item.size}\n`;
                 message += `   Quantidade: ${item.qty}x\n`;
                 message += `   Preço Unit: R$ ${parseFloat(item.price).toFixed(2).replace('.', ',')}\n`;
                 message += `   Subtotal: R$ ${itemTotal.toFixed(2).replace('.', ',')}\n\n`;
