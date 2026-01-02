@@ -48,6 +48,22 @@
     {% endif %}
     {% endwith %}
 
+    {% with messages = get_flashed_messages(category_filter=['warning']) %}
+    {% if messages %}
+      <div class="bg-yellow-50 border-2 border-yellow-400 text-yellow-800 p-4 rounded-lg mb-6 font-medium">
+        <strong>⚠️ Atenção!</strong> {{ messages[0] }}
+      </div>
+    {% endif %}
+    {% endwith %}
+
+    {% with messages = get_flashed_messages(category_filter=['error']) %}
+    {% if messages %}
+      <div class="bg-red-50 border-2 border-red-400 text-red-800 p-4 rounded-lg mb-6 font-medium">
+        <strong>❌ Erro!</strong> {{ messages[0] }}
+      </div>
+    {% endif %}
+    {% endwith %}
+
     <!-- BUSCA E FILTROS -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-8">
       <form method="get" class="flex flex-col sm:flex-row gap-3">
@@ -106,7 +122,8 @@
                 {% set thumb = 'placeholder.jpg' %}
                 {% endif %}
                 <img src="{{ thumb if thumb.startswith('http') else url_for('static', filename='images/' + thumb) }}"
-                  alt="{{ p.name }}" class="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg border-2 border-gray-200 flex-shrink-0">
+                  alt="{{ p.name }}" class="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg border-2 border-gray-200 flex-shrink-0"
+                  crossorigin="anonymous">
 
                 <!-- INFO -->
                 <div class="flex-1 min-w-0">
@@ -168,9 +185,9 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Preço Normal</label>
                         <div class="relative">
                           <span class="absolute left-3 top-2.5 text-gray-600">R$</span>
-                          <input name="price" value="{{ '%.2f' % p.price }}"
-                            placeholder="99.90"
-                            class="w-full border-2 border-gray-300 rounded-lg px-8 py-2 focus:ring-2 focus:ring-primary-pink focus:border-primary-pink transition" required>
+                          <input type="text" inputmode="decimal" name="price" value="{{ '%.2f' % p.price }}"
+                            placeholder="99,90"
+                            class="price-input w-full border-2 border-gray-300 rounded-lg px-8 py-2 focus:ring-2 focus:ring-primary-pink focus:border-primary-pink transition" required>
                         </div>
                       </div>
 
@@ -178,10 +195,10 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Preço com Desconto (Opcional)</label>
                         <div class="relative">
                           <span class="absolute left-3 top-2.5 text-gray-600">R$</span>
-                          <input name="discount_price"
+                          <input type="text" inputmode="decimal" name="discount_price"
                             value="{% if p.discount_price %}{{ '%.2f' % p.discount_price }}{% endif %}"
                             placeholder="Deixe vazio para usar preço normal"
-                            class="w-full border-2 border-yellow-300 rounded-lg px-8 py-2 bg-yellow-50 focus:ring-2 focus:ring-primary-pink focus:border-primary-pink transition">
+                            class="price-input w-full border-2 border-yellow-300 rounded-lg px-8 py-2 bg-yellow-50 focus:ring-2 focus:ring-primary-pink focus:border-primary-pink transition">
                         </div>
                       </div>
 
@@ -237,7 +254,8 @@
                       {% for img in p.images %}
                       <div class="relative group">
                         <img src="{{ img.image_url if img.image_url.startswith('http') else url_for('static', filename='images/' + img.image_url) }}"
-                          alt="Foto" class="w-full h-32 object-cover rounded-lg border-2 border-gray-200">
+                          alt="Foto" class="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                          crossorigin="anonymous">
                         
                         <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-lg transition flex items-center justify-center">
                           <form action="{{ url_for('admin_remove_image', image_id=img.id) }}"
@@ -379,8 +397,8 @@
                           <label class="block text-sm font-medium text-gray-700 mb-1">Preço Especial (Opcional)</label>
                           <div class="relative">
                             <span class="absolute left-2 top-2 text-gray-600">R$</span>
-                            <input name="price" placeholder="Deixe vazio para usar o padrão"
-                              class="w-full border-2 border-gray-300 rounded px-6 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            <input type="text" inputmode="decimal" name="price" placeholder="Deixe vazio para usar o padrão"
+                              class="price-input w-full border-2 border-gray-300 rounded px-6 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                           </div>
                         </div>
 
@@ -518,8 +536,8 @@
           <label class="block text-sm font-medium text-gray-700 mb-2">Preço Normal</label>
           <div class="relative">
             <span class="absolute left-3 top-2.5 text-gray-600">R$</span>
-            <input name="price" placeholder="99.90"
-              class="w-full border-2 border-gray-300 rounded-lg px-8 py-2 focus:ring-2 focus:ring-primary-pink focus:border-primary-pink transition" required>
+            <input type="text" inputmode="decimal" name="price" placeholder="99,90"
+              class="price-input w-full border-2 border-gray-300 rounded-lg px-8 py-2 focus:ring-2 focus:ring-primary-pink focus:border-primary-pink transition" required>
           </div>
         </div>
 
@@ -527,8 +545,8 @@
           <label class="block text-sm font-medium text-gray-700 mb-2">Preço com Desconto (Opcional)</label>
           <div class="relative">
             <span class="absolute left-3 top-2.5 text-gray-600">R$</span>
-            <input name="discount_price" placeholder="Deixe em branco se não houver"
-              class="w-full border-2 border-yellow-300 rounded-lg px-8 py-2 bg-yellow-50 focus:ring-2 focus:ring-primary-pink focus:border-primary-pink transition">
+            <input type="text" inputmode="decimal" name="discount_price" placeholder="Deixe em branco se não houver"
+              class="price-input w-full border-2 border-yellow-300 rounded-lg px-8 py-2 bg-yellow-50 focus:ring-2 focus:ring-primary-pink focus:border-primary-pink transition">
           </div>
         </div>
 
@@ -591,6 +609,132 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!details.classList.contains('hidden')) {
           details.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
+      }
+    });
+  });
+
+  // Format price inputs - BRL currency (comma decimal separator)
+  const priceInputs = document.querySelectorAll('.price-input');
+  
+  function formatPriceInput(value) {
+    // Remove everything that's not a digit
+    let cleaned = value.replace(/\D/g, '');
+    
+    // If empty, return empty
+    if (!cleaned) return '';
+    
+    // Ensure at least 3 digits (for proper decimal placement)
+    if (cleaned.length < 3) {
+      cleaned = cleaned;
+    } else {
+      // Last 2 digits are decimals
+      let integerPart = cleaned.slice(0, -2);
+      let decimalPart = cleaned.slice(-2);
+      
+      // Add thousands separator (dot) to integer part
+      integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      
+      // If no integer part, set to 0
+      if (!integerPart) integerPart = '0';
+      
+      // Combine with comma as decimal separator
+      cleaned = integerPart + ',' + decimalPart;
+    }
+    
+    return cleaned;
+  }
+  
+  priceInputs.forEach(input => {
+    // On input: format in real-time as user types
+    input.addEventListener('input', (e) => {
+      let value = e.target.value;
+      
+      // Only keep digits
+      let cleaned = value.replace(/\D/g, '');
+      
+      if (!cleaned) {
+        e.target.value = '';
+        return;
+      }
+      
+      // If 1-2 digits, show as is (user is still typing)
+      if (cleaned.length <= 2) {
+        e.target.value = cleaned;
+      } else {
+        // 3+ digits: format with comma as decimal
+        let integerPart = cleaned.slice(0, -2);
+        let decimalPart = cleaned.slice(-2);
+        
+        // Add thousands separator
+        integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        
+        e.target.value = integerPart + ',' + decimalPart;
+      }
+    });
+
+    // On blur: ensure proper formatting with 2 decimal places
+    input.addEventListener('blur', (e) => {
+      let value = e.target.value.trim();
+      
+      if (value === '') {
+        e.target.value = '0,00';
+        return;
+      }
+      
+      // Remove formatting, keep only digits
+      let cleaned = value.replace(/\D/g, '');
+      
+      if (!cleaned) {
+        e.target.value = '0,00';
+        return;
+      }
+      
+      // If 1-2 digits were entered, treat as reais (not cents)
+      // User typed "88" -> should be "88,00" not "0,88"
+      if (cleaned.length === 1) {
+        e.target.value = cleaned + ',00';
+        return;
+      }
+      
+      if (cleaned.length === 2) {
+        e.target.value = cleaned + ',00';
+        return;
+      }
+      
+      let integerPart = cleaned.slice(0, -2);
+      let decimalPart = cleaned.slice(-2);
+      
+      // Add thousands separator
+      integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      
+      e.target.value = integerPart + ',' + decimalPart;
+    });
+
+    // Prevent paste of invalid characters
+    input.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+      
+      // Extract only numbers
+      let cleaned = pastedText.replace(/\D/g, '');
+      
+      if (!cleaned) {
+        e.target.value = '';
+        return;
+      }
+      
+      // If 1-2 digits, show as is
+      if (cleaned.length <= 2) {
+        e.target.value = cleaned;
+      } else {
+        // 3+ digits: format with comma as decimal
+        let integerPart = cleaned.slice(0, -2);
+        let decimalPart = cleaned.slice(-2);
+        
+        // Add thousands separator
+        integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        
+        e.target.value = integerPart + ',' + decimalPart;
       }
     });
   });

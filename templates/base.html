@@ -5,31 +5,25 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>AM Conceito Fitness</title>
 
- <script>
-  tailwind.config = {
-   theme: {
-    extend: {
-     colors: {
-      'primary-pink': '#DDA8A0',
-      'primary-pink-dark': '#C79387',
-      'base-white': '#F9FBF6',
-      'accent-green': '#B2FB53',
-      'muted-gray': '#6B7280',
-      'black': '#1E1E1E'
-     },
-     borderRadius: {
-      'md-lg': '12px'
-     },
-     boxShadow: {
-      'card': '0 6px 24px rgba(16,24,40,0.08)' 
-     }
-    }
-   },
-   corePlugins: { preflight: true }
-  }
- </script>
  <script src="https://cdn.tailwindcss.com"></script>
+ <script>
+   tailwind.config = {
+     theme: {
+       extend: {
+         colors: {
+           'primary-pink': '#DDA8A0',
+           'primary-pink-dark': '#C79387',
+           'base-white': '#F9FBF6',
+           'accent-green': '#B2FB53',
+           'muted-gray': '#6B7280',
+         }
+       }
+     }
+   }
+ </script>
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
+ 
  <style>
   :root{
    --primary-pink: #DDA8A0;
@@ -51,7 +45,7 @@
   .btn-primary {
    background-color: var(--primary-pink);
    color: #ffffff;
-   border-radius: 0.5rem;
+   border-radius: 0;
    transition: background-color .2s ease, transform .1s ease;
    box-shadow: 0 3px 5px rgba(0,0,0,0.1); 
   }
@@ -75,6 +69,60 @@
   }
   .text-primary-pink { color: var(--primary-pink) !important; }
   .bg-base-white { background-color: var(--base-white) !important; }
+
+  /* Placeholder para imagens que falharam */
+  .img-placeholder {
+    background: linear-gradient(135deg, #DDA8A0 0%, #C79387 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 0 !important;
+  }
+  
+  .img-placeholder::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: shimmer 3s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  /* Admin gallery adjustments - para imagens pequenas em grid */
+  .grid .relative img.img-placeholder {
+    transform: scale(0.65) !important;
+    transform-origin: center !important;
+  }
+  
+  .img-placeholder-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+    opacity: 0.9;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  }
+  
+  .img-placeholder-text {
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    letter-spacing: 0.3px;
+  }
 
   /* Esconde as setas nativas (spin buttons) em navegadores modernos */
   input[type="number"]::-webkit-inner-spin-button,
@@ -125,18 +173,68 @@
       display: none !important;
     }
   }
+
+  /* Toast Notifications */
+  .toast {
+    pointer-events: auto;
+    animation: slideInRight 0.3s ease-out forwards, fadeOut 0.3s ease-in 3.7s forwards;
+    transform-origin: right center;
+  }
+
+  @keyframes slideInRight {
+    from {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeOut {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+  }
+
+  .toast-progress {
+    animation: progress 4s linear forwards;
+  }
+
+  @keyframes progress {
+    from {
+      width: 100%;
+    }
+    to {
+      width: 0%;
+    }
+  }
+
+  @media (max-width: 640px) {
+    #toast-container {
+      right: 1rem;
+      left: 1rem;
+      max-width: calc(100% - 2rem);
+    }
+  }
  </style>
 
  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="bg-base-white text-gray-800">
 
-<header class="bg-white shadow-sm">
-  <div class="container mx-auto px-4">
+<header class="bg-white shadow-sm w-full">
+  <div class="w-full px-4">
     <!-- Top row: logo and nav buttons -->
-    <div class="py-3 flex items-center justify-between">
+    <div class="py-3 flex items-center justify-between  mx-auto">
       <a href="{{ url_for('index') }}" class="flex items-center gap-3 hover:opacity-80 transition flex-shrink-0">
-        <img src="{{ url_for('static', filename='images/logo-nova.jpeg') }}" alt="logo" class="h-12 sm:h-14 w-12 sm:w-14 object-contain rounded-full border-2 border-primary-pink/30 shadow-sm flex-shrink-0">
+        <img src="{{ url_for('static', filename='images/logo-nova.jpeg') }}" alt="logo" class="h-12 sm:h-14 w-12 sm:w-14 object-contain border-2 border-primary-pink/30 shadow-sm flex-shrink-0">
         <div class=" ">
           <div class="text-primary-pink text-lg sm:text-xl font-extrabold tracking-tight leading-tight">AM Conceito Fitness</div>
           <div class="text-muted-gray hidden sm:block text-xs font-medium">Conforto, autocuidado e amor próprio! 🌷🤍</div>
@@ -150,7 +248,7 @@
         <!-- Search container (desktop/tablet) -->
         <div class="search-container hidden md:block">
           <form method="get" action="{{ url_for('index') }}" class="relative w-full">
-            <input id="search-input" name="q" type="search" placeholder="Buscar produtos" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 pr-10 text-sm focus:ring-2 focus:ring-primary-pink focus:border-primary-pink transition" />
+            <input id="search-input" name="q" type="search" placeholder="Buscar produtos" class="w-full border-2 border-gray-300 px-3 py-2 pr-10 text-sm focus:ring-2 focus:ring-primary-pink focus:border-primary-pink transition" />
             <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-primary-pink hover:text-primary-pink-dark transition p-1">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -161,20 +259,20 @@
 
         <a href="{{ url_for('index') }}" class="text-sm font-semibold text-gray-700 hover:text-primary-pink transition hidden sm:block">Catálogo</a>
         
-        <button id="cart-btn" class="btn-primary px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition flex-shrink-0">
+        <button id="cart-btn" class="btn-primary px-3 sm:px-4 py-2 text-sm font-semibold flex items-center gap-2 transition flex-shrink-0">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
           </svg>
           <span class="hidden sm:inline">Carrinho</span>
-          <span class="bg-white text-primary-pink rounded-full px-2 py-0.5 text-xs font-bold" id="cart-count">0</span>
+          <span class="bg-white text-primary-pink px-2 py-0.5 text-xs font-bold" id="cart-count">0</span>
         </button>
       </nav>
     </div>
 
     <!-- Bottom row: search bar for mobile/tablet -->
-    <div class="md:hidden pb-3">
+    <div class="md:hidden pb-3 max-w-[1100px] mx-auto">
       <form method="get" action="{{ url_for('index') }}" class="relative w-full">
-        <input id="search-input-mobile" name="q" type="search" placeholder="Buscar produtos..." class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 pr-10 text-sm focus:ring-2 focus:ring-primary-pink focus:border-primary-pink transition" />
+        <input id="search-input-mobile" name="q" type="search" placeholder="Buscar produtos..." class="w-full border-2 border-gray-300 px-3 py-2 pr-10 text-sm focus:ring-2 focus:ring-primary-pink focus:border-primary-pink transition" />
         <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-primary-pink hover:text-primary-pink-dark transition p-1">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -186,8 +284,14 @@
 </header>
 
 <main class="container mx-auto px-4 py-8">
+  {% if hero_included != True %}
+    {% set hero_included = True %}
+  {% endif %}
   {% block content %}{% endblock %}
 </main>
+
+<!-- Container de Notificações Toast -->
+<div id="toast-container" class="fixed top-20 right-4 z-[9999] space-y-3 max-w-md w-full pointer-events-none"></div>
 
 <footer class="mt-12 bg-gray-900 text-gray-200">
  <div class="container mx-auto px-4 py-8">
@@ -195,7 +299,7 @@
 
    <div>
     <div class="flex items-start gap-3 mb-3">
-     <img src="{{ url_for('static', filename='images/logo-nova.jpeg') }}" alt="AM Conceito Fitness" class="h-10 w-10 object-contain rounded-full bg-white p-1">
+    <img src="{{ url_for('static', filename='images/logo-nova.jpeg') }}" alt="AM Conceito Fitness" class="h-10 w-10 object-contain bg-white p-1">
      <div>
             <div class="font-bold text-white">AM Conceito Fitness</div>
       <div class="text-sm text-primary-pink">FITNESS</div>
@@ -274,6 +378,114 @@
 var el = document.getElementById('current-year-footer');
 if(el) el.textContent = new Date().getFullYear();
 })();
+
+// Sistema de Notificações Toast
+window.showToast = function(message, type = 'info', duration = 4000) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = 'toast bg-white rounded-lg shadow-2xl overflow-hidden border-l-4 transform transition-all';
+  
+  // Define cores e ícones baseado no tipo
+  let borderColor, bgColor, icon, iconColor;
+  switch(type) {
+    case 'success':
+      borderColor = 'border-green-500';
+      bgColor = 'bg-green-50';
+      iconColor = 'text-green-500';
+      icon = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>`;
+      break;
+    case 'error':
+      borderColor = 'border-red-500';
+      bgColor = 'bg-red-50';
+      iconColor = 'text-red-500';
+      icon = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>`;
+      break;
+    case 'warning':
+      borderColor = 'border-yellow-500';
+      bgColor = 'bg-yellow-50';
+      iconColor = 'text-yellow-600';
+      icon = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+      </svg>`;
+      break;
+    case 'update':
+      borderColor = 'border-blue-500';
+      bgColor = 'bg-blue-50';
+      iconColor = 'text-blue-500';
+      icon = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+      </svg>`;
+      break;
+    default:
+      borderColor = 'border-primary-pink';
+      bgColor = 'bg-primary-pink/10';
+      iconColor = 'text-primary-pink';
+      icon = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>`;
+  }
+
+  toast.classList.add(borderColor);
+  
+  toast.innerHTML = `
+    <div class="flex items-start p-4 ${bgColor}">
+      <div class="flex-shrink-0 ${iconColor}">
+        ${icon}
+      </div>
+      <div class="ml-3 flex-1">
+        <p class="text-sm font-medium text-gray-900">${message}</p>
+      </div>
+      <button class="ml-4 flex-shrink-0 inline-flex text-gray-400 hover:text-gray-600 focus:outline-none" onclick="this.parentElement.parentElement.remove()">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="toast-progress h-1 bg-current ${iconColor} opacity-30"></div>
+  `;
+
+  container.appendChild(toast);
+
+  // Remove automaticamente após a duração
+  setTimeout(() => {
+    if (toast.parentElement) {
+      toast.remove();
+    }
+  }, duration);
+};
+</script>
+
+<script>
+// Handler global para imagens quebradas
+document.addEventListener('DOMContentLoaded', () => {
+  // Adiciona handler para todas as imagens de produtos
+  document.querySelectorAll('.carousel-item img, img[src*="supabase"]').forEach(img => {
+    img.addEventListener('error', function() {
+      if (!this.dataset.errorHandled) {
+        this.dataset.errorHandled = 'true';
+        const parent = this.parentElement;
+        const placeholder = document.createElement('div');
+        placeholder.className = 'img-placeholder  h-80';
+        placeholder.innerHTML = `
+          <svg class="img-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 16L8.586 11.414C9.367 10.633 10.633 10.633 11.414 11.414L16 16M14 14L15.586 12.414C16.367 11.633 17.633 11.633 18.414 12.414L20 14M14 8H14.01M6 20H18C19.105 20 20 19.105 20 18V6C20 4.895 19.105 4 18 4H6C4.895 4 4 4.895 4 6V18C4 19.105 4.895 20 6 20Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div class="img-placeholder-text">
+            <div style="font-size: 15px; margin-bottom: 4px;">Imagem Indisponível</div>
+            <div style="font-size: 11px; opacity: 0.8; font-weight: 400;">AM Conceito Fitness</div>
+          </div>
+        `;
+        parent.replaceChild(placeholder, this);
+      }
+    });
+  });
+});
 </script>
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
@@ -287,6 +499,47 @@ if(el) el.textContent = new Date().getFullYear();
     if(btn) btn.addEventListener('click', () => { window.location.href = "{{ url_for('cart') if False else '/cart' }}"; });
     // sincroniza entre abas
     window.addEventListener('storage', () => updateCartCount());
+
+    // Handler para TODAS as imagens - captura Supabase e imagens locais
+    const placeholderSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' fill='none'%3E%3Crect width='400' height='300' fill='%23DDA8A0'/%3E%3Crect width='400' height='300' fill='url(%23grad)' opacity='0.1'/%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:white;stop-opacity:0.3'/%3E%3Cstop offset='100%25' style='stop-color:black;stop-opacity:0.1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='200' cy='80' r='35' fill='white' opacity='0.3'/%3E%3Cpath d='M 150 140 L 200 100 L 250 140' stroke='white' stroke-width='6' fill='none' opacity='0.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ctext x='200' y='190' font-family='Arial, sans-serif' font-size='16' font-weight='bold' fill='white' text-anchor='middle' opacity='0.9'%3EImagem Indispon%C3%ADvel%3C/text%3E%3Ctext x='200' y='220' font-family='Arial, sans-serif' font-size='12' fill='white' text-anchor='middle' opacity='0.7'%3EAM Conceito Fitness%3C/text%3E%3C/svg%3E`;
+
+    const showPlaceholder = (img) => {
+      if (!img.src.includes('data:image')) {
+        img.src = placeholderSvg;
+        img.classList.add('img-placeholder');
+      }
+    };
+
+    const setupImageErrorHandler = () => {
+      document.querySelectorAll('img').forEach(img => {
+        if (!img.dataset.errorListenerSetup) {
+          img.dataset.errorListenerSetup = 'true';
+          
+          // Handler para erro de carregamento
+          img.addEventListener('error', function() {
+            showPlaceholder(this);
+          });
+
+          // Timeout para imagens do Supabase que podem não disparar erro corretamente
+          if (img.src.includes('supabase')) {
+            const timeout = setTimeout(() => {
+              if (!img.complete || img.naturalHeight === 0) {
+                showPlaceholder(img);
+              }
+            }, 3000); // 3 segundos
+            
+            img.addEventListener('load', () => clearTimeout(timeout));
+          }
+        }
+      });
+    };
+
+    // Setup inicial e adicionar observer para novas imagens
+    setupImageErrorHandler();
+    
+    // Observer para imagens carregadas dinamicamente
+    const observer = new MutationObserver(() => setupImageErrorHandler());
+    observer.observe(document.body, { childList: true, subtree: true });
 
     // Header scroll effect
     const header = document.querySelector('header');

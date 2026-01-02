@@ -55,6 +55,7 @@ class ProductStock(Base):
   id = Column(Integer, primary_key=True)
   product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
   size = Column(String(50), nullable=False)
+  color = Column(String(50), nullable=True)
   quantity = Column(Integer, default=0)
   # preço específico para essa variação (opcional)
   price = Column(Float, nullable=True)
@@ -306,6 +307,55 @@ def calculate_shipping():
             'message': f'Erro ao calcular frete: {str(e)}'
         }), 500
 
+@app.route("/api/check-stock", methods=["POST"])
+def check_stock():
+    """
+    Verifica o estoque disponível para múltiplas variantes.
+    Recebe JSON: { "variant_ids": [1, 2, 3, ...] }
+    Retorna JSON: { "success": bool, "stock": { "variant_id": quantity, ... } }
+    """
+    try:
+        data = request.get_json() or {}
+        variant_ids = data.get('variant_ids', [])
+        
+        if not variant_ids:
+            return jsonify({
+                'success': False,
+                'stock': {},
+                'message': 'Nenhuma variante fornecida'
+            }), 400
+        
+        with SessionLocal() as db:
+            # Buscar todas as variantes solicitadas
+            variants = db.query(ProductStock).filter(
+                ProductStock.id.in_(variant_ids)
+            ).all()
+            
+            # Montar mapa de id -> quantidade
+            stock_map = {}
+            for variant in variants:
+                stock_map[variant.id] = variant.quantity
+            
+            # Adicionar variantes não encontradas com quantidade 0
+            for var_id in variant_ids:
+                if var_id not in stock_map:
+                    stock_map[var_id] = 0
+            
+            print(f"[info] Stock check para {len(variant_ids)} variantes: {stock_map}")
+            
+            return jsonify({
+                'success': True,
+                'stock': stock_map
+            })
+    
+    except Exception as e:
+        print(f"[error] Erro em check_stock: {e}")
+        return jsonify({
+            'success': False,
+            'stock': {},
+            'message': f'Erro ao verificar estoque: {str(e)}'
+        }), 500
+
 # =========================================================================
 # ROTAS PÚBLICAS
 # =========================================================================
@@ -517,8 +567,9 @@ def admin_add():
   price_str = request.form.get("price") or '0'
   discount_price_str = request.form.get("discount_price")
   
-  price = float(price_str)
-  discount_price = float(discount_price_str) if discount_price_str else None
+  # Convert comma (BRL format) to dot for float conversion
+  price = float(price_str.replace(',', '.'))
+  discount_price = float(discount_price_str.replace(',', '.')) if discount_price_str else None
   
   classification_id = request.form.get("classification") or None
   uploaded = request.files.getlist("images")
@@ -533,13 +584,26 @@ def admin_add():
     )
     db.add(p)
     db.commit()
+    
     # salvar imagens no Supabase e criar ProductImage com URLs
-    # Passa o nome do produto para renomeação inteligente
-    saved_urls = save_uploaded_images(uploaded, product_name=name, existing_count=0)
-    for url in saved_urls:
-      db.add(ProductImage(product_id=p.id, image_url=url))
-    db.commit()
-    flash(f"Produto '{name}' adicionado com sucesso. Adicione variações de estoque.")
+    if uploaded and uploaded[0].filename:
+      # Passa o nome do produto para renomeação inteligente
+      saved_urls = save_uploaded_images(uploaded, product_name=name, existing_count=0)
+      
+      # Verificar se houve erro no upload
+      if not saved_urls and len(uploaded) > 0:
+        flash(f"Produto '{name}' adicionado, mas houve erro ao fazer upload das imagens. ⚠️", "warning")
+      else:
+        for url in saved_urls:
+          db.add(ProductImage(product_id=p.id, image_url=url))
+        db.commit()
+        if saved_urls:
+          flash(f"Produto '{name}' adicionado com sucesso. {len(saved_urls)} imagem(ns) enviada(s).")
+        else:
+          flash(f"Produto '{name}' adicionado com sucesso.")
+    else:
+      flash(f"Produto '{name}' adicionado com sucesso. Adicione variações de estoque.")
+    
     return redirect(url_for("admin_dashboard"))
 
 @app.route("/admin/edit/<int:pid>", methods=["POST"])
@@ -558,21 +622,39 @@ def admin_edit(pid):
     price_str = request.form.get("price")
     discount_price_str = request.form.get("discount_price")
 
-    p.price = float(price_str) if price_str else p.price
-    p.discount_price = float(discount_price_str) if discount_price_str else None
+    # Convert comma (BRL format) to dot for float conversion
+    p.price = float(price_str.replace(',', '.')) if price_str else p.price
+    p.discount_price = float(discount_price_str.replace(',', '.')) if discount_price_str else None
     
     # classificação
     classification_id = request.form.get("classification") or None
     p.classification_id = int(classification_id) if classification_id else None
+    
     # imagens novas (não removemos as antigas aqui — apenas adicionamos)
     uploaded = request.files.getlist("images")
-    # Conta quantas imagens já existem para incrementar corretamente
-    existing_images_count = len(p.images)
-    saved_urls = save_uploaded_images(uploaded, product_name=p.name, existing_count=existing_images_count)
-    for url in saved_urls:
-      db.add(ProductImage(product_id=p.id, image_url=url))
+    upload_errors = []
+    
+    if uploaded and uploaded[0].filename:  # Se há arquivos para upload
+      # Conta quantas imagens já existem para incrementar corretamente
+      existing_images_count = len(p.images)
+      saved_urls = save_uploaded_images(uploaded, product_name=p.name, existing_count=existing_images_count)
+      
+      # Verificar se houve erro no upload
+      if not saved_urls and len(uploaded) > 0:
+        upload_errors.append("⚠️ Erro ao fazer upload de imagens. Verifique sua conexão com a internet.")
+        flash("Produto atualizado, mas houve erro ao fazer upload das imagens.", "warning")
+      else:
+        for url in saved_urls:
+          db.add(ProductImage(product_id=p.id, image_url=url))
+        if saved_urls:
+          flash(f"Produto atualizado. {len(saved_urls)} imagem(ns) adicionada(s).")
+        else:
+          flash("Produto atualizado.")
+    else:
+      flash("Produto atualizado.")
+    
     db.commit()
-  flash("Produto atualizado")
+  
   return redirect(url_for("admin_dashboard"))
 
 @app.route("/admin/edit_stock/<int:pid>", methods=["POST"])
@@ -643,6 +725,7 @@ def admin_add_variant(pid):
     new_variant = ProductStock(
       product_id=pid,
       size=size,
+      color="Único",
       quantity=quantity,
       is_available=(quantity > 0),
       price=price_val
@@ -657,6 +740,7 @@ def admin_add_variant(pid):
     db.commit()
   flash(f"Variação tamanho {size} adicionada com sucesso.")
   return redirect(url_for("admin_dashboard"))
+
 
 # Remover imagem específica (Supabase Storage + registro DB)
 @app.route("/admin/remove_image/<int:image_id>", methods=["POST"])

@@ -112,6 +112,63 @@
         // Inicializar UI do carrinho
         updateCartUI();
 
+        // Carrossel de imagens dos produtos
+        function initProductCarousels() {
+            document.querySelectorAll('.carousel-track').forEach(track => {
+                const productId = track.dataset.productId;
+                const items = track.querySelectorAll('.carousel-item');
+                const prevBtn = track.closest('.relative').querySelector('.carousel-prev');
+                const nextBtn = track.closest('.relative').querySelector('.carousel-next');
+
+                if (!items.length || items.length <= 1) {
+                    // Oculta botões se houver apenas 1 imagem
+                    if (prevBtn) prevBtn.style.display = 'none';
+                    if (nextBtn) nextBtn.style.display = 'none';
+                    return;
+                }
+
+                let currentIndex = 0;
+
+                function updateCarousel() {
+                    const itemWidth = items[0].offsetWidth;
+                    track.scrollTo({
+                        left: itemWidth * currentIndex,
+                        behavior: 'smooth'
+                    });
+                }
+
+                if (prevBtn) {
+                    prevBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        currentIndex = Math.max(0, currentIndex - 1);
+                        updateCarousel();
+                    });
+                }
+
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        currentIndex = Math.min(items.length - 1, currentIndex + 1);
+                        updateCarousel();
+                    });
+                }
+
+                // Detecta scroll manual para atualizar o índice
+                let scrollTimeout;
+                track.addEventListener('scroll', () => {
+                    clearTimeout(scrollTimeout);
+                    scrollTimeout = setTimeout(() => {
+                        const itemWidth = items[0].offsetWidth;
+                        currentIndex = Math.round(track.scrollLeft / itemWidth);
+                    }, 150);
+                });
+            });
+        }
+
+        initProductCarousels();
+
         // Expor funções globalmente se necessário
         window.addItemToCart = addItemToCart;
         window.loadCart = loadCart;
