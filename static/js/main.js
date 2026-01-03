@@ -112,7 +112,7 @@
         // Inicializar UI do carrinho
         updateCartUI();
 
-        // Carrossel de imagens dos produtos
+        // Carrossel de imagens dos produtos - SEM SCROLL NATIVO, APENAS BOTÕES
         function initProductCarousels() {
             document.querySelectorAll('.carousel-track').forEach(track => {
                 const productId = track.dataset.productId;
@@ -131,10 +131,8 @@
 
                 function updateCarousel() {
                     const itemWidth = items[0].offsetWidth;
-                    track.scrollTo({
-                        left: itemWidth * currentIndex,
-                        behavior: 'smooth'
-                    });
+                    // Usar transform em vez de scrollTo para não ter scroll nativo
+                    track.style.transform = `translateX(${-itemWidth * currentIndex}px)`;
                 }
 
                 if (prevBtn) {
@@ -155,14 +153,24 @@
                     });
                 }
 
-                // Detecta scroll manual para atualizar o índice
-                let scrollTimeout;
-                track.addEventListener('scroll', () => {
-                    clearTimeout(scrollTimeout);
-                    scrollTimeout = setTimeout(() => {
-                        const itemWidth = items[0].offsetWidth;
-                        currentIndex = Math.round(track.scrollLeft / itemWidth);
-                    }, 150);
+                // Previne navegação acidental ao clicar na imagem
+                const links = track.querySelectorAll('a');
+                let touchStartX = 0;
+
+                track.addEventListener('touchstart', (e) => {
+                    touchStartX = e.touches[0].clientX;
+                }, { passive: true });
+
+                links.forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        const touchEndX = e.touches?.[0]?.clientX || e.clientX;
+                        const dragDistance = Math.abs(touchStartX - touchEndX);
+
+                        // Se teve drag > 10px, cancela navegação ao detalhe
+                        if (dragDistance > 10) {
+                            e.preventDefault();
+                        }
+                    });
                 });
             });
         }

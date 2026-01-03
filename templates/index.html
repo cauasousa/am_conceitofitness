@@ -2,13 +2,13 @@
 {% block content %}
 
 <!-- Hero Carousel - Full Width without mx-auto -->
-<div class="relative overflow-hidden shadow-2xl mb-12 min-h-[420px] md:min-h-[560px] w-screen -ml-4 md:-ml-[calc(50vw-50%)]">
+<div class="relative overflow-hidden shadow-2xl mb-12 min-h-[280px] sm:min-h-[340px] md:min-h-[560px] w-screen -ml-4 md:-ml-[calc(50vw-50%)]">
   <!-- Slide 1: Imagem de Natal -->
   <div class="hero-slide active" data-slide="1">
-    <div class="relative h-full min-h-[420px] md:min-h-[560px]">
-      <img src="{{ url_for('static', filename='images/Hero-Banner-Natal.png') }}" 
+    <div class="relative h-full min-h-[280px] sm:min-h-[340px] md:min-h-[560px] bg-gray-100">
+      <img src="{{ url_for('static', filename='images/hero-back-ground.png') }}" 
            alt="Banner de Natal" 
-           class="w-full h-full min-h-[420px] md:min-h-[560px] object-cover">
+           class="w-full h-full object-contain">
       <div class="absolute inset-0 bg-black/20"></div>
     </div>
   </div>
